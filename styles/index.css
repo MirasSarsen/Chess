@@ -1,0 +1,41 @@
+body {
+    background-color: #302e2b;
+}
+
+#root {
+    width: fit-content;
+    margin: auto;
+}
+
+.squareRow {
+    display: flex;
+}
+
+.square {
+    width: 75px;
+    height: 75px;
+}
+
+.white {
+    background-color: #EEEED2;
+}
+
+.black {
+    background-color: #769656;
+}
+
+.piece {
+    width: 100%;
+    cursor: pointer;
+}
+
+
+.highlight {
+    width: 32px;
+    height: 32px;
+    margin: auto;
+    margin-top: 20px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.17);
+    display: block;
+}
