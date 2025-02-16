@@ -2,6 +2,30 @@ import * as piece from "../Data/pieces.js";
 import { ROOT_DIV } from "../Helper/constants.js";
 import { globalState } from "../index.js";
 
+//динамическое передвижение фигур благодаря айдишникам
+function moveElement(piece, id) {
+    const flatData = globalState.flat();
+
+    flatData.forEach(el => {
+        if (el.id == piece.current_position) {
+            delete el.piece;
+        }
+
+        if (el.id == id) {
+            el.piece = piece;
+        }
+    });
+
+    clearHightlight();
+    const previousPiece = document.getElementById(piece.current_position);
+    previousPiece.classList.remove("hightlightYellow");
+    const currentPiece = document.getElementById(id);
+    currentPiece.innerHTML = previousPiece.innerHTML;
+    previousPiece.innerHTML = "";
+
+    piece.current_position = id;
+}
+
 function clearPreviousSelfHighlight(piece) {
     if (piece) {
         document
@@ -128,4 +152,5 @@ export {
     clearHightlight,
     selfHighlight,
     clearPreviousSelfHighlight,
+    moveElement,
 };

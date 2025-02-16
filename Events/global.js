@@ -4,6 +4,7 @@ import { renderHightlight } from "../Render/main.js";
 import { clearHightlight } from "../Render/main.js";
 import { selfHighlight } from "../Render/main.js";
 import { clearPreviousSelfHighlight } from "../Render/main.js";
+import { moveElement } from "../Render/main.js";
 
 //подсветить или нет (стейт)
 let hightlight_state = false;
@@ -65,7 +66,8 @@ function GlobalEvent() {
                 event.target.localName == "span"
             ) {
                 if (event.target.localName == "span") {
-                    console.log(event.target.parentNode);
+                    const id = event.target.parentNode.id;
+                    moveElement(moveState, id);
                 } else {
                 }
             } else {
