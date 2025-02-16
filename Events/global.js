@@ -32,11 +32,30 @@ function whitePawnClick({ piece }) {
 
     const current_pos = piece.current_position;
     const flatArray = globalState.flat();
-    //начальная позиция
+
+    //иницилизация позиции для передвижения
     if (current_pos[1] === "2") {
+        //начальная позиция
         const hightlightSquareIds = [
             `${current_pos[0]}${Number(current_pos[1]) + 1}`,
             `${current_pos[0]}${Number(current_pos[1]) + 2}`,
+        ];
+
+        //очистить доску для любого предыдущего хода
+        clearHightlight();
+        hightlightSquareIds.forEach(hightlight => {
+            globalState.forEach(row => {
+                row.forEach(element => {
+                    if (element.id == hightlight) {
+                        element.highlight(true);
+                    }
+                });
+            });
+        });
+    } else {
+        //с той же позиции
+        const hightlightSquareIds = [
+            `${current_pos[0]}${Number(current_pos[1]) + 1}`,
         ];
 
         //очистить доску для любого предыдущего хода
