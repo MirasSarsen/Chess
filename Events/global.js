@@ -11,11 +11,17 @@ let hightlight_state = false;
 //правильное состояние подсветки (то есть, чтобы очищать фон с посл клика)
 let selfHighlightState = null;
 
+//состояние для динамического движения
+let moveState = null;
+
 function whitePawnClick({ piece }) {
     //подсветка фигуры при клике
     clearPreviousSelfHighlight(selfHighlightState);
     selfHighlight(piece);
     selfHighlightState = piece;
+
+    //фигура для динамического движения
+    moveState = piece;
 
     const current_pos = piece.current_position;
     const flatArray = globalState.flat();
@@ -33,7 +39,6 @@ function whitePawnClick({ piece }) {
                 row.forEach(element => {
                     if (element.id == hightlight) {
                         element.highlight(true);
-                        console.log(globalState);
                     }
                 });
             });
@@ -49,6 +54,24 @@ function GlobalEvent() {
             const square = flatArray.find(el => el.id == clickId);
             if (square.piece.piece_name == "white_pawn") {
                 whitePawnClick(square);
+            }
+        } else {
+            const childElementsOfclickedEl = Array.from(
+                event.target.childNodes
+            );
+
+            if (
+                childElementsOfclickedEl.length == 1 ||
+                event.target.localName == "span"
+            ) {
+                if (event.target.localName == "span") {
+                    console.log(event.target.parentNode);
+                } else {
+                }
+            } else {
+                //очистка подсветки
+                clearHightlight();
+                clearPreviousSelfHighlight(selfHighlightState);
             }
         }
     });
