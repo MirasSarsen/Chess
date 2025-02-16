@@ -16,6 +16,12 @@ let selfHighlightState = null;
 let moveState = null;
 
 function whitePawnClick({ piece }) {
+    if (piece == selfHighlightState) {
+        clearPreviousSelfHighlight(selfHighlightState);
+        selfHighlightState = null;
+        clearHightlight();
+        return;
+    }
     //подсветка фигуры при клике
     clearPreviousSelfHighlight(selfHighlightState);
     selfHighlight(piece);
@@ -68,7 +74,11 @@ function GlobalEvent() {
                 if (event.target.localName == "span") {
                     const id = event.target.parentNode.id;
                     moveElement(moveState, id);
+                    moveState = null;
                 } else {
+                    const id = event.target.id;
+                    moveElement(moveState, id);
+                    moveState = null;
                 }
             } else {
                 //очистка подсветки
