@@ -4,8 +4,8 @@ import { initGameRender } from "./Render/main.js";
 
 // будет полезна для конца игры
 const globalState = initGame();
-GlobalEvent();
 
 initGameRender(globalState);
+GlobalEvent();
 
 export { globalState };

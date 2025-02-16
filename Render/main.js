@@ -1,6 +1,20 @@
 import * as piece from "../Data/pieces.js";
 import { ROOT_DIV } from "../Helper/constants.js";
+import { globalState } from "../index.js";
 
+function clearPreviousSelfHighlight(piece) {
+    if (piece) {
+        document
+            .getElementById(piece.current_position)
+            .classList.remove("hightlightYellow");
+    }
+}
+
+function selfHighlight(piece) {
+    document
+        .getElementById(piece.current_position)
+        .classList.add("hightlightYellow");
+}
 // использует рендер любых из фигур в доску
 function pieceRender(data) {
     data.forEach(row => {
@@ -89,4 +103,29 @@ function initGameRender(data) {
     pieceRender(data);
 }
 
-export { initGameRender };
+//рендер подсветки круга
+function renderHightlight(squareId) {
+    const hightlightSpan = document.createElement("span");
+    hightlightSpan.classList.add("hightlight");
+    document.getElementById(squareId).appendChild(hightlightSpan);
+}
+
+//убрать подсветку
+function clearHightlight() {
+    const flatData = globalState.flat();
+
+    flatData.forEach(el => {
+        if (el.highlighted) {
+            document.getElementById(el.id).innerHTML = "";
+            el.highlighted = false;
+        }
+    });
+}
+
+export {
+    initGameRender,
+    renderHightlight,
+    clearHightlight,
+    selfHighlight,
+    clearPreviousSelfHighlight,
+};
