@@ -5,6 +5,7 @@ import { clearHightlight } from "../Render/main.js";
 import { selfHighlight } from "../Render/main.js";
 import { clearPreviousSelfHighlight } from "../Render/main.js";
 import { moveElement } from "../Render/main.js";
+import { checkPieceOfOpponentOnElement } from "../Helper/commonHelper.js";
 
 //подсветить или нет (стейт)
 let hightlight_state = false;
@@ -15,8 +16,12 @@ let selfHighlightState = null;
 //состояние для динамического движения
 let moveState = null;
 
+//функция шаха с проверкой наличия противника
+
 //логика белых пешек
 function whitePawnClick({ piece }) {
+    clearPreviousSelfHighlight(selfHighlightState);
+
     //очищать фон с клика в любое место доски
     if (piece == selfHighlightState) {
         clearPreviousSelfHighlight(selfHighlightState);
@@ -54,13 +59,27 @@ function whitePawnClick({ piece }) {
             });
         });
     } else {
+        const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
+            Number(current_pos[1]) + 1
+        }`;
+        const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
+            Number(current_pos[1]) + 1
+        }`;
+
+        console.log(checkPieceOfOpponentOnElement(col1, "white"));
+        console.log(checkPieceOfOpponentOnElement(col2, "white"));
+
+        const captureIds = [col1, col2];
+
         //с той же позиции
         const hightlightSquareIds = [
             `${current_pos[0]}${Number(current_pos[1]) + 1}`,
         ];
 
-        //очистить доску для любого предыдущего хода
-        clearHightlight();
+        captureIds.forEach(element => {
+            checkPieceOfOpponentOnElement(element, "white");
+        });
+
         hightlightSquareIds.forEach(hightlight => {
             globalState.forEach(row => {
                 row.forEach(element => {
@@ -75,6 +94,8 @@ function whitePawnClick({ piece }) {
 
 //логика черных пешек
 function blackPawnClick({ piece }) {
+    clearPreviousSelfHighlight(selfHighlightState);
+
     //очищать фон с клика в любое место доски
     if (piece == selfHighlightState) {
         clearPreviousSelfHighlight(selfHighlightState);
@@ -160,10 +181,6 @@ function GlobalEvent() {
                     moveElement(moveState, id);
                     moveState = null;
                 }
-                //очистка подсветки после первого хода (чтобы не кликать второй раз после хода)
-                clearHightlight();
-                clearPreviousSelfHighlight(selfHighlightState);
-                selfHighlightState = null;
             } else {
                 //очистка подсветки
                 clearHightlight();

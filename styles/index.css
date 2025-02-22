@@ -33,6 +33,10 @@ body {
     cursor: pointer;
 }
 
+.captureColor {
+    background-color: #Ee4b2b;
+}
+
 .hightlight {
     width: 25px;
     display: block;
