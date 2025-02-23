@@ -2,6 +2,17 @@ import * as piece from "../Data/pieces.js";
 import { ROOT_DIV } from "../Helper/constants.js";
 import { globalState } from "../index.js";
 
+//функция для рендера фигур из globalStateData (используется для обновления globalState)
+function globalStateRender() {
+    globalState.forEach(row => {
+        row.forEach(element => {
+            if (element.piece != null) {
+                console.log(element);
+            }
+        });
+    });
+}
+
 //динамическое передвижение фигур благодаря айдишникам
 function moveElement(piece, id) {
     const flatData = globalState.flat();
@@ -157,4 +168,5 @@ export {
     selfHighlight,
     clearPreviousSelfHighlight,
     moveElement,
+    globalStateRender,
 };

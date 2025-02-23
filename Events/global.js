@@ -1,6 +1,6 @@
 import { ROOT_DIV } from "../Helper/constants.js";
 import { globalState } from "../index.js";
-import { renderHightlight } from "../Render/main.js";
+import { globalStateRender, renderHightlight } from "../Render/main.js";
 import { clearHightlight } from "../Render/main.js";
 import { selfHighlight } from "../Render/main.js";
 import { clearPreviousSelfHighlight } from "../Render/main.js";
@@ -16,21 +16,33 @@ let selfHighlightState = null;
 //состояние для динамического движения
 let moveState = null;
 
-//функция шаха с проверкой наличия противника
+//локальная функция очистки подсветки
+function clearHighlightLocal() {
+    clearHightlight();
+    hightlight_state = false;
+}
+
+//передвижение фигуры относительно х-доски и у-доски
+function movePieceFromXToY(from, to) {}
 
 //логика белых пешек
 function whitePawnClick({ piece }) {
+    globalStateRender();
+
+    if (hightlight_state) return;
+
     clearPreviousSelfHighlight(selfHighlightState);
 
     //очищать фон с клика в любое место доски
     if (piece == selfHighlightState) {
         clearPreviousSelfHighlight(selfHighlightState);
         selfHighlightState = null;
-        clearHightlight();
+        clearHighlightLocal();
         return;
     }
     //подсветка фигуры при клике
     selfHighlight(piece);
+    hightlight_state = true;
     selfHighlightState = piece;
 
     //фигура для динамического движения
@@ -48,7 +60,7 @@ function whitePawnClick({ piece }) {
         ];
 
         //очистить доску для любого предыдущего хода
-        clearHightlight();
+        clearHighlightLocal();
         hightlightSquareIds.forEach(hightlight => {
             globalState.forEach(row => {
                 row.forEach(element => {
@@ -94,17 +106,25 @@ function whitePawnClick({ piece }) {
 
 //логика черных пешек
 function blackPawnClick({ piece }) {
+    globalStateRender();
+
+    if (hightlight_state) {
+        movePieceFromXToY(selfHighlightState, piece);
+        return;
+    }
+
     clearPreviousSelfHighlight(selfHighlightState);
 
     //очищать фон с клика в любое место доски
     if (piece == selfHighlightState) {
         clearPreviousSelfHighlight(selfHighlightState);
         selfHighlightState = null;
-        clearHightlight();
+        clearHighlightLocal();
         return;
     }
     //подсветка фигуры при клике
     selfHighlight(piece);
+    hightlight_state = true;
     selfHighlightState = piece;
 
     //фигура для динамического движения
@@ -122,7 +142,7 @@ function blackPawnClick({ piece }) {
         ];
 
         //очистить доску для любого предыдущего хода
-        clearHightlight();
+        clearHighlightLocal();
         hightlightSquareIds.forEach(hightlight => {
             globalState.forEach(row => {
                 row.forEach(element => {
@@ -139,7 +159,7 @@ function blackPawnClick({ piece }) {
         ];
 
         //очистить доску для любого предыдущего хода
-        clearHightlight();
+        clearHighlightLocal();
         hightlightSquareIds.forEach(hightlight => {
             globalState.forEach(row => {
                 row.forEach(element => {
@@ -183,7 +203,7 @@ function GlobalEvent() {
                 }
             } else {
                 //очистка подсветки
-                clearHightlight();
+                clearHighlightLocal();
                 clearPreviousSelfHighlight(selfHighlightState);
                 selfHighlightState = null;
             }
