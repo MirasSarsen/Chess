@@ -27,7 +27,7 @@ function movePieceFromXToY(from, to) {}
 
 //логика белых пешек
 function whitePawnClick({ piece }) {
-    globalStateRender();
+    // globalStateRender();
 
     if (hightlight_state) return;
 
@@ -61,15 +61,18 @@ function whitePawnClick({ piece }) {
 
         //очистить доску для любого предыдущего хода
         clearHighlightLocal();
+
         hightlightSquareIds.forEach(hightlight => {
             globalState.forEach(row => {
                 row.forEach(element => {
                     if (element.id == hightlight) {
-                        element.highlight(true);
+                        element.highlight = true;
                     }
                 });
             });
         });
+
+        globalStateRender();
     } else {
         const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
             Number(current_pos[1]) + 1
@@ -96,17 +99,19 @@ function whitePawnClick({ piece }) {
             globalState.forEach(row => {
                 row.forEach(element => {
                     if (element.id == hightlight) {
-                        element.highlight(true);
+                        element.highlight = true;
                     }
                 });
             });
         });
+
+        globalStateRender();
     }
 }
 
 //логика черных пешек
 function blackPawnClick({ piece }) {
-    globalStateRender();
+    // globalStateRender();
 
     if (hightlight_state) {
         movePieceFromXToY(selfHighlightState, piece);
@@ -147,11 +152,13 @@ function blackPawnClick({ piece }) {
             globalState.forEach(row => {
                 row.forEach(element => {
                     if (element.id == hightlight) {
-                        element.highlight(true);
+                        element.highlight = true;
                     }
                 });
             });
         });
+
+        globalStateRender();
     } else {
         //с той же позиции
         const hightlightSquareIds = [
@@ -164,12 +171,13 @@ function blackPawnClick({ piece }) {
             globalState.forEach(row => {
                 row.forEach(element => {
                     if (element.id == hightlight) {
-                        element.highlight(true);
+                        element.highlight = true;
                     }
                 });
             });
         });
     }
+    globalStateRender();
 }
 
 function GlobalEvent() {

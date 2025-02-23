@@ -6,8 +6,18 @@ import { globalState } from "../index.js";
 function globalStateRender() {
     globalState.forEach(row => {
         row.forEach(element => {
+            if (element.highlight) {
+                const hightlightSpan = document.createElement("span");
+                hightlightSpan.classList.add("hightlight");
+                document.getElementById(element.id).appendChild(hightlightSpan);
+            } else if (element.highlight === null) {
+                const el = document.getElementById(element.id);
+                const highlights = Array.from(el.getElementsByTagName("span"));
+                highlights.forEach(element => {
+                    el.removeChild(element);
+                });
+            }
             if (element.piece != null) {
-                console.log(element);
             }
         });
     });
@@ -150,14 +160,15 @@ function clearHightlight() {
     const flatData = globalState.flat();
 
     flatData.forEach(el => {
-        if (el.captureHighlight) {
-            document.getElementById(el.id).classList.remove("captureColor");
+        // if (el.captureHighlight) {
+        //     document.getElementById(el.id).classList.remove("captureColor");
+        // }
+
+        if (el.highlight) {
+            el.highlight = null;
         }
 
-        if (el.highlighted) {
-            document.getElementById(el.id).innerHTML = "";
-            el.highlighted = false;
-        }
+        globalStateRender();
     });
 }
 

@@ -4,12 +4,7 @@ import { globalState } from "../index.js";
 export function Greet() {}
 
 function Square(color, id, piece) {
-    const highlight = function () {
-        renderHightlight(this.id);
-        this.highlighted = true;
-    };
-
-    return { color, id, piece, highlight };
+    return { color, id, piece };
 }
 
 function SquareRow(rowId) {
