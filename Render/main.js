@@ -1,6 +1,7 @@
 import * as piece from "../Data/pieces.js";
 import { ROOT_DIV } from "../Helper/constants.js";
 import { globalState } from "../index.js";
+import { movePieceFromXToY } from "../Events/global.js";
 
 //функция для рендера фигур из globalStateData (используется для обновления globalState)
 function globalStateRender() {
@@ -17,8 +18,6 @@ function globalStateRender() {
                     el.removeChild(element);
                 });
             }
-            if (element.piece != null) {
-            }
         });
     });
 }
@@ -31,28 +30,17 @@ function moveElement(piece, id) {
         if (el.id == piece.current_position) {
             delete el.piece;
         }
-
         if (el.id == id) {
             el.piece = piece;
         }
     });
-
-    clearHightlight();
     const previousPiece = document.getElementById(piece.current_position);
     previousPiece.classList.remove("hightlightYellow");
     const currentPiece = document.getElementById(id);
     currentPiece.innerHTML = previousPiece.innerHTML;
     previousPiece.innerHTML = "";
-
     piece.current_position = id;
-}
-
-function clearPreviousSelfHighlight(piece) {
-    if (piece) {
-        document
-            .getElementById(piece.current_position)
-            .classList.remove("hightlightYellow");
-    }
+    clearHightlight();
 }
 
 function selfHighlight(piece) {
@@ -160,9 +148,10 @@ function clearHightlight() {
     const flatData = globalState.flat();
 
     flatData.forEach(el => {
-        // if (el.captureHighlight) {
-        //     document.getElementById(el.id).classList.remove("captureColor");
-        // }
+        if (el.captureHighlight) {
+            document.getElementById(el.id).classList.remove("captureColor");
+            el.captureHighlight = false;
+        }
 
         if (el.highlight) {
             el.highlight = null;
@@ -177,7 +166,6 @@ export {
     renderHightlight,
     clearHightlight,
     selfHighlight,
-    clearPreviousSelfHighlight,
     moveElement,
     globalStateRender,
 };

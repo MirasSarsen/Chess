@@ -1,11 +1,18 @@
 import { ROOT_DIV } from "../Helper/constants.js";
-import { globalState } from "../index.js";
-import { globalStateRender, renderHightlight } from "../Render/main.js";
-import { clearHightlight } from "../Render/main.js";
-import { selfHighlight } from "../Render/main.js";
-import { clearPreviousSelfHighlight } from "../Render/main.js";
-import { moveElement } from "../Render/main.js";
-import { checkPieceOfOpponentOnElement } from "../Helper/commonHelper.js";
+import { globalState, keySquareMapper } from "../index.js";
+import {
+    globalStateRender,
+    renderHightlight,
+    moveElement,
+    clearHightlight,
+    selfHighlight,
+} from "../Render/main.js";
+import {
+    checkPieceOfOpponentOnElement,
+    checkSquareCaptureId,
+    giveBishopHighlightIds,
+} from "../Helper/commonHelper.js";
+import { whiteBishop } from "../Data/pieces.js";
 
 //подсветить или нет (стейт)
 let hightlight_state = false;
@@ -23,23 +30,34 @@ function clearHighlightLocal() {
 }
 
 //передвижение фигуры относительно х-доски и у-доски
-function movePieceFromXToY(from, to) {}
+function movePieceFromXToY(from, to) {
+    to.piece = from.piece;
+    from.piece = null;
+    globalStateRender();
+}
 
 //логика белых пешек
-function whitePawnClick({ piece }) {
-    // globalStateRender();
+function whitePawnClick(square) {
+    const piece = square.piece;
 
-    if (hightlight_state) return;
-
-    clearPreviousSelfHighlight(selfHighlightState);
-
-    //очищать фон с клика в любое место доски
     if (piece == selfHighlightState) {
         clearPreviousSelfHighlight(selfHighlightState);
-        selfHighlightState = null;
         clearHighlightLocal();
         return;
     }
+
+    if (square.captureHighlight) {
+        // пешка хавает других
+        moveElement(selfHighlightState, piece.current_position);
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    //очистить всю доску от подсветок
+    clearPreviousSelfHighlight(selfHighlightState);
+    clearHighlightLocal();
+
     //подсветка фигуры при клике
     selfHighlight(piece);
     hightlight_state = true;
@@ -54,22 +72,23 @@ function whitePawnClick({ piece }) {
     //иницилизация позиции для передвижения
     if (current_pos[1] === "2") {
         //начальная позиция
-        const hightlightSquareIds = [
+        let hightlightSquareIds = [
             `${current_pos[0]}${Number(current_pos[1]) + 1}`,
             `${current_pos[0]}${Number(current_pos[1]) + 2}`,
         ];
 
-        //очистить доску для любого предыдущего хода
-        clearHighlightLocal();
+        hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
 
         hightlightSquareIds.forEach(hightlight => {
-            globalState.forEach(row => {
-                row.forEach(element => {
-                    if (element.id == hightlight) {
-                        element.highlight = true;
-                    }
-                });
-            });
+            // globalState.forEach(row => {
+            //     row.forEach(element => {
+            //         if (element.id == hightlight) {
+            //             element.highlight = true;
+            //         }
+            //     });
+            // });
+            const element = keySquareMapper[hightlight];
+            element.highlight = true;
         });
 
         globalStateRender();
@@ -81,10 +100,8 @@ function whitePawnClick({ piece }) {
             Number(current_pos[1]) + 1
         }`;
 
-        console.log(checkPieceOfOpponentOnElement(col1, "white"));
-        console.log(checkPieceOfOpponentOnElement(col2, "white"));
-
-        const captureIds = [col1, col2];
+        let captureIds = [col1, col2];
+        // captureIds = checkSquareCaptureId(captureIds);
 
         //с той же позиции
         const hightlightSquareIds = [
@@ -96,13 +113,95 @@ function whitePawnClick({ piece }) {
         });
 
         hightlightSquareIds.forEach(hightlight => {
-            globalState.forEach(row => {
-                row.forEach(element => {
-                    if (element.id == hightlight) {
-                        element.highlight = true;
-                    }
-                });
-            });
+            const element = keySquareMapper[hightlight];
+            element.highlight = true;
+        });
+
+        globalStateRender();
+    }
+}
+
+//логика белого слона
+function whiteBishopClick(square) {
+    const piece = square.piece;
+
+    if (piece == selfHighlightState) {
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    if (square.captureHighlight) {
+        // пешка хавает других
+        moveElement(selfHighlightState, piece.current_position);
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    //очистить всю доску от подсветок
+    clearPreviousSelfHighlight(selfHighlightState);
+    clearHighlightLocal();
+
+    //подсветка фигуры при клике
+    selfHighlight(piece);
+    hightlight_state = true;
+    selfHighlightState = piece;
+
+    //фигура для динамического движения
+    moveState = piece;
+
+    const current_pos = piece.current_position;
+    const flatArray = globalState.flat();
+
+    let hightlightSquareIds = giveBishopHighlightIds(current_pos);
+
+    hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
+
+    //иницилизация позиции для передвижения
+    if (current_pos[1] === "2") {
+        //начальная позиция
+        let hightlightSquareIds = [
+            `${current_pos[0]}${Number(current_pos[1]) + 1}`,
+            `${current_pos[0]}${Number(current_pos[1]) + 2}`,
+        ];
+
+        hightlightSquareIds.forEach(hightlight => {
+            // globalState.forEach(row => {
+            //     row.forEach(element => {
+            //         if (element.id == hightlight) {
+            //             element.highlight = true;
+            //         }
+            //     });
+            // });
+            const element = keySquareMapper[hightlight];
+            element.highlight = true;
+        });
+
+        globalStateRender();
+    } else {
+        const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
+            Number(current_pos[1]) + 1
+        }`;
+        const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
+            Number(current_pos[1]) + 1
+        }`;
+
+        let captureIds = [col1, col2];
+        // captureIds = checkSquareCaptureId(captureIds);
+
+        //с той же позиции
+        const hightlightSquareIds = [
+            `${current_pos[0]}${Number(current_pos[1]) + 1}`,
+        ];
+
+        captureIds.forEach(element => {
+            checkPieceOfOpponentOnElement(element, "white");
+        });
+
+        hightlightSquareIds.forEach(hightlight => {
+            const element = keySquareMapper[hightlight];
+            element.highlight = true;
         });
 
         globalStateRender();
@@ -110,23 +209,26 @@ function whitePawnClick({ piece }) {
 }
 
 //логика черных пешек
-function blackPawnClick({ piece }) {
-    // globalStateRender();
+function blackPawnClick(square) {
+    const piece = square.piece;
 
-    if (hightlight_state) {
-        movePieceFromXToY(selfHighlightState, piece);
+    if (piece == selfHighlightState) {
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    if (square.captureHighlight) {
+        // пешка хавает других
+        moveElement(selfHighlightState, piece.current_position);
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
         return;
     }
 
     clearPreviousSelfHighlight(selfHighlightState);
+    clearHighlightLocal();
 
-    //очищать фон с клика в любое место доски
-    if (piece == selfHighlightState) {
-        clearPreviousSelfHighlight(selfHighlightState);
-        selfHighlightState = null;
-        clearHighlightLocal();
-        return;
-    }
     //подсветка фигуры при клике
     selfHighlight(piece);
     hightlight_state = true;
@@ -141,55 +243,70 @@ function blackPawnClick({ piece }) {
     //иницилизация позиции для передвижения
     if (current_pos[1] === "7") {
         //начальная позиция
-        const hightlightSquareIds = [
+        let hightlightSquareIds = [
             `${current_pos[0]}${Number(current_pos[1]) - 1}`,
             `${current_pos[0]}${Number(current_pos[1]) - 2}`,
         ];
 
-        //очистить доску для любого предыдущего хода
-        clearHighlightLocal();
+        hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
+
         hightlightSquareIds.forEach(hightlight => {
-            globalState.forEach(row => {
-                row.forEach(element => {
-                    if (element.id == hightlight) {
-                        element.highlight = true;
-                    }
-                });
-            });
+            const element = keySquareMapper[hightlight];
+            element.highlight = true;
         });
 
         globalStateRender();
     } else {
+        const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
+            Number(current_pos[1]) - 1
+        }`;
+        const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
+            Number(current_pos[1]) - 1
+        }`;
+
+        let captureIds = [col1, col2];
+        // captureIds = checkSquareCaptureId(captureIds);
+
         //с той же позиции
         const hightlightSquareIds = [
             `${current_pos[0]}${Number(current_pos[1]) - 1}`,
         ];
 
-        //очистить доску для любого предыдущего хода
-        clearHighlightLocal();
-        hightlightSquareIds.forEach(hightlight => {
-            globalState.forEach(row => {
-                row.forEach(element => {
-                    if (element.id == hightlight) {
-                        element.highlight = true;
-                    }
-                });
-            });
+        captureIds.forEach(element => {
+            checkPieceOfOpponentOnElement(element, "black");
         });
+
+        hightlightSquareIds.forEach(hightlight => {
+            const element = keySquareMapper[hightlight];
+            element.highlight = true;
+        });
+
+        globalStateRender();
     }
-    globalStateRender();
+}
+
+function clearPreviousSelfHighlight(piece) {
+    if (piece) {
+        document
+            .getElementById(piece.current_position)
+            .classList.remove("hightlightYellow");
+        selfHighlightState = null;
+    }
 }
 
 function GlobalEvent() {
     ROOT_DIV.addEventListener("click", function (event) {
         if (event.target.localName === "img") {
             const clickId = event.target.parentNode.id;
-            const flatArray = globalState.flat();
-            const square = flatArray.find(el => el.id == clickId);
+            // const flatArray = globalState.flat();
+            // const square = flatArray.find(el => el.id == clickId);
+            const square = keySquareMapper[clickId];
             if (square.piece.piece_name == "white_pawn") {
                 whitePawnClick(square);
             } else if (square.piece.piece_name == "black_pawn") {
                 blackPawnClick(square);
+            } else if (square.piece.piece_name == "white_bishop") {
+                whiteBishopClick(square);
             }
         } else {
             const childElementsOfclickedEl = Array.from(
@@ -201,10 +318,12 @@ function GlobalEvent() {
                 event.target.localName == "span"
             ) {
                 if (event.target.localName == "span") {
+                    clearPreviousSelfHighlight(selfHighlightState);
                     const id = event.target.parentNode.id;
                     moveElement(moveState, id);
                     moveState = null;
                 } else {
+                    clearPreviousSelfHighlight(selfHighlightState);
                     const id = event.target.id;
                     moveElement(moveState, id);
                     moveState = null;
@@ -213,10 +332,9 @@ function GlobalEvent() {
                 //очистка подсветки
                 clearHighlightLocal();
                 clearPreviousSelfHighlight(selfHighlightState);
-                selfHighlightState = null;
             }
         }
     });
 }
 
-export { GlobalEvent };
+export { GlobalEvent, movePieceFromXToY };
