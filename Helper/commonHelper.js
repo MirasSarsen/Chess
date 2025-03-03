@@ -19,6 +19,18 @@ function checkPieceOfOpponentOnElement(id, color) {
     return false;
 }
 
+//функция для проверки фигуры перед шахом (чтобы шах не сработал когда впереди фигура)
+
+function checkWeatherPieceExistsOrNot(squareId) {
+    const square = keySquareMapper[squareId];
+
+    if (square.piece) {
+        return square;
+    } else {
+        return false;
+    }
+}
+
 //функция для проверки Capture ids в клетке
 function checkSquareCaptureId(array) {
     let returnArray = [];
@@ -100,10 +112,76 @@ function giveBishopHighlightIds(id) {
         return resultArray;
     }
 
-    console.log(topLeft(id));
-    console.log(bottomLeft(id));
-    console.log(topRight(id));
-    console.log(bottomRight(id));
+    return {
+        topLeft: topLeft(id),
+        bottomLeft: bottomLeft(id),
+        topRight: topRight(id),
+        bottomRight: bottomRight(id),
+    };
+}
+
+function giveRookHighlightIds(id) {
+    let finalReturnArray = [];
+
+    //выдает айди фигуры сверху слева
+    function top(id) {
+        let alpha = id[0];
+        let num = Number(id[1]);
+        let resultArray = [];
+
+        while (alpha != "a" && num != 8) {
+            alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
+            num = num + 1;
+            resultArray.push(`${alpha}${num}`);
+        }
+
+        return resultArray;
+    }
+
+    //выдает айди фигуры снизу слева
+    function bottom(id) {
+        let alpha = id[0];
+        let num = Number(id[1]);
+        let resultArray = [];
+
+        while (alpha != "a" && num != 1) {
+            alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
+            num = num - 1;
+            resultArray.push(`${alpha}${num}`);
+        }
+
+        return resultArray;
+    }
+
+    //находит айди сверху справа
+    function right(id) {
+        let alpha = id[0];
+        let num = Number(id[1]);
+        let resultArray = [];
+
+        while (alpha != "h" && num != 8) {
+            alpha = String.fromCharCode(alpha.charCodeAt(0) + 1);
+            num = num + 1;
+            resultArray.push(`${alpha}${num}`);
+        }
+
+        return resultArray;
+    }
+
+    //находит айди снизу справа
+    function left(id) {
+        let alpha = id[0];
+        let num = Number(id[1]);
+        let resultArray = [];
+
+        while (alpha != "h" && num != 1) {
+            alpha = String.fromCharCode(alpha.charCodeAt(0) + 1);
+            num = num - 1;
+            resultArray.push(`${alpha}${num}`);
+        }
+
+        return resultArray;
+    }
 
     return {
         topLeft: topLeft(id),
@@ -117,4 +195,5 @@ export {
     checkPieceOfOpponentOnElement,
     checkSquareCaptureId,
     giveBishopHighlightIds,
+    checkWeatherPieceExistsOrNot,
 };

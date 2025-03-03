@@ -11,6 +11,7 @@ import {
     checkPieceOfOpponentOnElement,
     checkSquareCaptureId,
     giveBishopHighlightIds,
+    checkWeatherPieceExistsOrNot,
 } from "../Helper/commonHelper.js";
 import { whiteBishop } from "../Data/pieces.js";
 
@@ -148,6 +149,7 @@ function whiteBishopClick(square) {
     const flatArray = globalState.flat();
 
     let hightlightSquareIds = giveBishopHighlightIds(current_pos);
+    let temp = [];
 
     const { bottomLeft, topLeft, bottomRight, topRight } = hightlightSquareIds;
 
@@ -156,6 +158,12 @@ function whiteBishopClick(square) {
     result.push(checkSquareCaptureId(topLeft));
     result.push(checkSquareCaptureId(bottomRight));
     result.push(checkSquareCaptureId(topRight));
+
+    //для темп
+    temp.push(bottomLeft);
+    temp.push(topLeft);
+    temp.push(bottomRight);
+    temp.push(topRight);
 
     // hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
     hightlightSquareIds = result.flat();
@@ -170,18 +178,37 @@ function whiteBishopClick(square) {
         element.highlight = true;
     });
 
-    const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
-        Number(current_pos[1]) + 1
-    }`;
-    const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
-        Number(current_pos[1]) + 1
-    }`;
+    let captureIds = [];
 
-    let captureIds = [col1, col2];
+    for (let index = 0; index < temp.length; index++) {
+        const arr = temp[index];
 
-    captureIds.forEach(element => {
-        checkPieceOfOpponentOnElement(element, "white");
-    });
+        for (let j = 0; j < arr.length; j++) {
+            const element = arr[j];
+
+            let checkPieceResult = checkWeatherPieceExistsOrNot(element);
+            if (
+                checkPieceResult &&
+                checkPieceResult.piece &&
+                checkPieceResult.piece.piece_name
+                    .toLowerCase()
+                    .includes("white")
+            ) {
+                break;
+            }
+
+            if (checkPieceOfOpponentOnElement(element, "white")) {
+                break;
+            }
+        }
+    }
+
+    // let captureIds = [col1, col2];
+    // console.log(hightlightSquareIds);
+
+    // captureIds.forEach(element => {
+    //     checkPieceOfOpponentOnElement(element, "white");
+    // });
 
     globalStateRender();
 }
