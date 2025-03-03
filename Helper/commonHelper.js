@@ -129,8 +129,8 @@ function giveRookHighlightIds(id) {
         let num = Number(id[1]);
         let resultArray = [];
 
-        while (alpha != "a" && num != 8) {
-            alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
+        while (num != 8) {
+            // alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
             num = num + 1;
             resultArray.push(`${alpha}${num}`);
         }
@@ -144,8 +144,8 @@ function giveRookHighlightIds(id) {
         let num = Number(id[1]);
         let resultArray = [];
 
-        while (alpha != "a" && num != 1) {
-            alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
+        while (num != 1) {
+            // alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
             num = num - 1;
             resultArray.push(`${alpha}${num}`);
         }
@@ -159,9 +159,9 @@ function giveRookHighlightIds(id) {
         let num = Number(id[1]);
         let resultArray = [];
 
-        while (alpha != "h" && num != 8) {
+        while (alpha != "h") {
             alpha = String.fromCharCode(alpha.charCodeAt(0) + 1);
-            num = num + 1;
+            // num = num - 0;
             resultArray.push(`${alpha}${num}`);
         }
 
@@ -174,9 +174,9 @@ function giveRookHighlightIds(id) {
         let num = Number(id[1]);
         let resultArray = [];
 
-        while (alpha != "h" && num != 1) {
-            alpha = String.fromCharCode(alpha.charCodeAt(0) + 1);
-            num = num - 1;
+        while (alpha != "a") {
+            alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
+            // num = num - 0;
             resultArray.push(`${alpha}${num}`);
         }
 
@@ -184,10 +184,10 @@ function giveRookHighlightIds(id) {
     }
 
     return {
-        topLeft: topLeft(id),
-        bottomLeft: bottomLeft(id),
-        topRight: topRight(id),
-        bottomRight: bottomRight(id),
+        top: top(id),
+        bottom: bottom(id),
+        right: right(id),
+        left: left(id),
     };
 }
 
@@ -196,4 +196,5 @@ export {
     checkSquareCaptureId,
     giveBishopHighlightIds,
     checkWeatherPieceExistsOrNot,
+    giveRookHighlightIds,
 };
