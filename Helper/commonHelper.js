@@ -38,12 +38,79 @@ function checkSquareCaptureId(array) {
 
 //функция для подсветки ходов слона
 function giveBishopHighlightIds(id) {
-    function minusAlphabet(alpha) {
-        return String.fromCharCode(alpha.charCodeAt(0) - 1);
+    let finalReturnArray = [];
+
+    //выдает айди фигуры сверху слева
+    function topLeft(id) {
+        let alpha = id[0];
+        let num = Number(id[1]);
+        let resultArray = [];
+
+        while (alpha != "a" && num != 8) {
+            alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
+            num = num + 1;
+            resultArray.push(`${alpha}${num}`);
+        }
+
+        return resultArray;
     }
 
-    console.log();
-    return [];
+    //выдает айди фигуры снизу слева
+    function bottomLeft(id) {
+        let alpha = id[0];
+        let num = Number(id[1]);
+        let resultArray = [];
+
+        while (alpha != "a" && num != 1) {
+            alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
+            num = num - 1;
+            resultArray.push(`${alpha}${num}`);
+        }
+
+        return resultArray;
+    }
+
+    //находит айди сверху справа
+    function topRight(id) {
+        let alpha = id[0];
+        let num = Number(id[1]);
+        let resultArray = [];
+
+        while (alpha != "h" && num != 8) {
+            alpha = String.fromCharCode(alpha.charCodeAt(0) + 1);
+            num = num + 1;
+            resultArray.push(`${alpha}${num}`);
+        }
+
+        return resultArray;
+    }
+
+    //находит айди снизу справа
+    function bottomRight(id) {
+        let alpha = id[0];
+        let num = Number(id[1]);
+        let resultArray = [];
+
+        while (alpha != "h" && num != 1) {
+            alpha = String.fromCharCode(alpha.charCodeAt(0) + 1);
+            num = num - 1;
+            resultArray.push(`${alpha}${num}`);
+        }
+
+        return resultArray;
+    }
+
+    console.log(topLeft(id));
+    console.log(bottomLeft(id));
+    console.log(topRight(id));
+    console.log(bottomRight(id));
+
+    return {
+        topLeft: topLeft(id),
+        bottomLeft: bottomLeft(id),
+        topRight: topRight(id),
+        bottomRight: bottomRight(id),
+    };
 }
 
 export {

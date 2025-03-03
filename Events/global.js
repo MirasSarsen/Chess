@@ -80,13 +80,6 @@ function whitePawnClick(square) {
         hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
 
         hightlightSquareIds.forEach(hightlight => {
-            // globalState.forEach(row => {
-            //     row.forEach(element => {
-            //         if (element.id == hightlight) {
-            //             element.highlight = true;
-            //         }
-            //     });
-            // });
             const element = keySquareMapper[hightlight];
             element.highlight = true;
         });
@@ -156,56 +149,113 @@ function whiteBishopClick(square) {
 
     let hightlightSquareIds = giveBishopHighlightIds(current_pos);
 
-    hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
+    const { bottomLeft, topLeft, bottomRight, topRight } = hightlightSquareIds;
 
-    //иницилизация позиции для передвижения
-    if (current_pos[1] === "2") {
-        //начальная позиция
-        let hightlightSquareIds = [
-            `${current_pos[0]}${Number(current_pos[1]) + 1}`,
-            `${current_pos[0]}${Number(current_pos[1]) + 2}`,
-        ];
+    let result = [];
+    result.push(checkSquareCaptureId(bottomLeft));
+    result.push(checkSquareCaptureId(topLeft));
+    result.push(checkSquareCaptureId(bottomRight));
+    result.push(checkSquareCaptureId(topRight));
 
-        hightlightSquareIds.forEach(hightlight => {
-            // globalState.forEach(row => {
-            //     row.forEach(element => {
-            //         if (element.id == hightlight) {
-            //             element.highlight = true;
-            //         }
-            //     });
-            // });
-            const element = keySquareMapper[hightlight];
-            element.highlight = true;
-        });
+    // hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
+    hightlightSquareIds = result.flat();
 
-        globalStateRender();
-    } else {
-        const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
-            Number(current_pos[1]) + 1
-        }`;
-        const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
-            Number(current_pos[1]) + 1
-        }`;
+    hightlightSquareIds.forEach(hightlight => {
+        const element = keySquareMapper[hightlight];
+        element.highlight = true;
+    });
 
-        let captureIds = [col1, col2];
-        // captureIds = checkSquareCaptureId(captureIds);
+    hightlightSquareIds.forEach(hightlight => {
+        const element = keySquareMapper[hightlight];
+        element.highlight = true;
+    });
 
-        //с той же позиции
-        const hightlightSquareIds = [
-            `${current_pos[0]}${Number(current_pos[1]) + 1}`,
-        ];
+    const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
+        Number(current_pos[1]) + 1
+    }`;
+    const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
+        Number(current_pos[1]) + 1
+    }`;
 
-        captureIds.forEach(element => {
-            checkPieceOfOpponentOnElement(element, "white");
-        });
+    let captureIds = [col1, col2];
 
-        hightlightSquareIds.forEach(hightlight => {
-            const element = keySquareMapper[hightlight];
-            element.highlight = true;
-        });
+    captureIds.forEach(element => {
+        checkPieceOfOpponentOnElement(element, "white");
+    });
 
-        globalStateRender();
+    globalStateRender();
+}
+
+//логика черного слона
+function blackBishopClick(square) {
+    const piece = square.piece;
+
+    if (piece == selfHighlightState) {
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
     }
+
+    if (square.captureHighlight) {
+        // пешка хавает других
+        moveElement(selfHighlightState, piece.current_position);
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    //очистить всю доску от подсветок
+    clearPreviousSelfHighlight(selfHighlightState);
+    clearHighlightLocal();
+
+    //подсветка фигуры при клике
+    selfHighlight(piece);
+    hightlight_state = true;
+    selfHighlightState = piece;
+
+    //фигура для динамического движения
+    moveState = piece;
+
+    const current_pos = piece.current_position;
+    const flatArray = globalState.flat();
+
+    let hightlightSquareIds = giveBishopHighlightIds(current_pos);
+
+    const { bottomLeft, topLeft, bottomRight, topRight } = hightlightSquareIds;
+
+    let result = [];
+    result.push(checkSquareCaptureId(bottomLeft));
+    result.push(checkSquareCaptureId(topLeft));
+    result.push(checkSquareCaptureId(bottomRight));
+    result.push(checkSquareCaptureId(topRight));
+
+    // hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
+    hightlightSquareIds = result.flat();
+
+    hightlightSquareIds.forEach(hightlight => {
+        const element = keySquareMapper[hightlight];
+        element.highlight = true;
+    });
+
+    hightlightSquareIds.forEach(hightlight => {
+        const element = keySquareMapper[hightlight];
+        element.highlight = true;
+    });
+
+    const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
+        Number(current_pos[1]) + 1
+    }`;
+    const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
+        Number(current_pos[1]) + 1
+    }`;
+
+    let captureIds = [col1, col2];
+
+    captureIds.forEach(element => {
+        checkPieceOfOpponentOnElement(element, "black");
+    });
+
+    globalStateRender();
 }
 
 //логика черных пешек
@@ -307,6 +357,8 @@ function GlobalEvent() {
                 blackPawnClick(square);
             } else if (square.piece.piece_name == "white_bishop") {
                 whiteBishopClick(square);
+            } else if (square.piece.piece_name == "black_bishop") {
+                blackBishopClick(square);
             }
         } else {
             const childElementsOfclickedEl = Array.from(
