@@ -13,8 +13,8 @@ import {
     giveBishopHighlightIds,
     checkWeatherPieceExistsOrNot,
     giveRookHighlightIds,
+    giveKnightHighlightIds,
 } from "../Helper/commonHelper.js";
-import { whiteBishop } from "../Data/pieces.js";
 
 //подсветить или нет (стейт)
 let hightlight_state = false;
@@ -308,6 +308,202 @@ function whiteRookClick(square) {
     // captureIds.forEach(element => {
     //     checkPieceOfOpponentOnElement(element, "white");
     // });
+
+    globalStateRender();
+}
+
+//логика белого коня
+function whiteKnightClick(square) {
+    const piece = square.piece;
+
+    if (piece == selfHighlightState) {
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    if (square.captureHighlight) {
+        // конь хавает других
+        moveElement(selfHighlightState, piece.current_position);
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    //очистить всю доску от подсветок
+    clearPreviousSelfHighlight(selfHighlightState);
+    clearHighlightLocal();
+
+    //подсветка фигуры при клике
+    selfHighlight(piece);
+    hightlight_state = true;
+    selfHighlightState = piece;
+
+    //фигура для динамического движения
+    moveState = piece;
+
+    const current_pos = piece.current_position;
+    const flatArray = globalState.flat();
+
+    let hightlightSquareIds = giveKnightHighlightIds(current_pos);
+    // let temp = [];
+
+    // const { top, bottom, left, right } = hightlightSquareIds;
+
+    // let result = [];
+    // result.push(checkSquareCaptureId(top));
+    // result.push(checkSquareCaptureId(bottom));
+    // result.push(checkSquareCaptureId(left));
+    // result.push(checkSquareCaptureId(right));
+
+    // //для темп
+    // temp.push(top);
+    // temp.push(bottom);
+    // temp.push(left);
+    // temp.push(right);
+
+    // // hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
+    // hightlightSquareIds = result.flat();
+
+    // hightlightSquareIds.forEach(hightlight => {
+    //     const element = keySquareMapper[hightlight];
+    //     element.highlight = true;
+    // });
+
+    hightlightSquareIds.forEach(hightlight => {
+        const element = keySquareMapper[hightlight];
+        element.highlight = true;
+    });
+
+    let captureIds = [];
+
+    // for (let index = 0; index < temp.length; index++) {
+    //     const arr = temp[index];
+
+    //     for (let j = 0; j < arr.length; j++) {
+    //         const element = arr[j];
+
+    //         let checkPieceResult = checkWeatherPieceExistsOrNot(element);
+    //         if (
+    //             checkPieceResult &&
+    //             checkPieceResult.piece &&
+    //             checkPieceResult.piece.piece_name
+    //                 .toLowerCase()
+    //                 .includes("white")
+    //         ) {
+    //             break;
+    //         }
+
+    //         if (checkPieceOfOpponentOnElement(element, "white")) {
+    //             break;
+    //         }
+    //     }
+    // }
+
+    // let captureIds = [col1, col2];
+    // console.log(hightlightSquareIds);
+
+    hightlightSquareIds.forEach(element => {
+        checkPieceOfOpponentOnElement(element, "white");
+    });
+
+    globalStateRender();
+}
+
+//логика черного коня
+function blackKnightClick(square) {
+    const piece = square.piece;
+
+    if (piece == selfHighlightState) {
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    if (square.captureHighlight) {
+        // конь хавает других
+        moveElement(selfHighlightState, piece.current_position);
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    //очистить всю доску от подсветок
+    clearPreviousSelfHighlight(selfHighlightState);
+    clearHighlightLocal();
+
+    //подсветка фигуры при клике
+    selfHighlight(piece);
+    hightlight_state = true;
+    selfHighlightState = piece;
+
+    //фигура для динамического движения
+    moveState = piece;
+
+    const current_pos = piece.current_position;
+    const flatArray = globalState.flat();
+
+    let hightlightSquareIds = giveKnightHighlightIds(current_pos);
+    // let temp = [];
+
+    // const { top, bottom, left, right } = hightlightSquareIds;
+
+    // let result = [];
+    // result.push(checkSquareCaptureId(top));
+    // result.push(checkSquareCaptureId(bottom));
+    // result.push(checkSquareCaptureId(left));
+    // result.push(checkSquareCaptureId(right));
+
+    // //для темп
+    // temp.push(top);
+    // temp.push(bottom);
+    // temp.push(left);
+    // temp.push(right);
+
+    // // hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
+    // hightlightSquareIds = result.flat();
+
+    // hightlightSquareIds.forEach(hightlight => {
+    //     const element = keySquareMapper[hightlight];
+    //     element.highlight = true;
+    // });
+
+    hightlightSquareIds.forEach(hightlight => {
+        const element = keySquareMapper[hightlight];
+        element.highlight = true;
+    });
+
+    let captureIds = [];
+
+    // for (let index = 0; index < temp.length; index++) {
+    //     const arr = temp[index];
+
+    //     for (let j = 0; j < arr.length; j++) {
+    //         const element = arr[j];
+
+    //         let checkPieceResult = checkWeatherPieceExistsOrNot(element);
+    //         if (
+    //             checkPieceResult &&
+    //             checkPieceResult.piece &&
+    //             checkPieceResult.piece.piece_name
+    //                 .toLowerCase()
+    //                 .includes("white")
+    //         ) {
+    //             break;
+    //         }
+
+    //         if (checkPieceOfOpponentOnElement(element, "white")) {
+    //             break;
+    //         }
+    //     }
+    // }
+
+    // let captureIds = [col1, col2];
+    // console.log(hightlightSquareIds);
+
+    hightlightSquareIds.forEach(element => {
+        checkPieceOfOpponentOnElement(element, "black");
+    });
 
     globalStateRender();
 }
@@ -613,6 +809,10 @@ function GlobalEvent() {
                 whiteRookClick(square);
             } else if (square.piece.piece_name == "black_rook") {
                 blackRookClick(square);
+            } else if (square.piece.piece_name == "white_knight") {
+                whiteKnightClick(square);
+            } else if (square.piece.piece_name == "black_knight") {
+                blackKnightClick(square);
             }
         } else {
             const childElementsOfclickedEl = Array.from(
