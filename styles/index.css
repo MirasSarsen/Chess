@@ -20,24 +20,24 @@ body {
 }
 
 .white {
-    background-color: #EEEED2;
+    background-color: #E8EDF9;
 }
 
 .black {
-    background-color: #769656;
+    background-color: #B7C0D8;
 }
 
 .hightlightYellow {
-    background: #f7f769;
+    background: #9d8bf6;
 }
 
 .piece {
-    width: 100%;
+    width: 90%;
     cursor: pointer;
 }
 
 .captureColor {
-    background-color: #Ee4b2b;
+    background-color: #7B61FF;
 }
 
 .hightlight {
@@ -46,6 +46,6 @@ body {
     height: 25px;
     margin: auto;
     border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.17);
+    background-color: #7B61FF;
     margin-top: 25px;
 }
