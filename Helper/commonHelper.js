@@ -370,6 +370,36 @@ function giveQueenHighlightIds(id) {
     };
 }
 
+//функция для подсветки ходов короля
+function giveKingHighlightIds(id) {
+    const rookMoves = giveRookHighlightIds(id);
+    const bishopMoves = giveBishopHighlightIds(id);
+
+    const returnResult = {
+        left: rookMoves.left,
+        right: rookMoves.right,
+        top: rookMoves.top,
+        bottom: rookMoves.bottom,
+
+        topLeft: bishopMoves.topLeft,
+        bottomLeft: bishopMoves.bottomLeft,
+        topRight: bishopMoves.topRight,
+        bottomRight: bishopMoves.bottomRight,
+    };
+
+    for (const key in returnResult) {
+        if (Object.hasOwnProperty.call(returnResult, key)) {
+            const element = returnResult[key];
+
+            if (element.length != 0) {
+                returnResult[key] = new Array(element[0]);
+            }
+        }
+    }
+
+    return returnResult;
+}
+
 export {
     checkPieceOfOpponentOnElement,
     checkSquareCaptureId,
@@ -378,4 +408,5 @@ export {
     giveRookHighlightIds,
     giveKnightHighlightIds,
     giveQueenHighlightIds,
+    giveKingHighlightIds,
 };

@@ -22,27 +22,6 @@ function globalStateRender() {
     });
 }
 
-//динамическое передвижение фигур благодаря айдишникам
-function moveElement(piece, id) {
-    const flatData = globalState.flat();
-
-    flatData.forEach(el => {
-        if (el.id == piece.current_position) {
-            delete el.piece;
-        }
-        if (el.id == id) {
-            el.piece = piece;
-        }
-    });
-    const previousPiece = document.getElementById(piece.current_position);
-    previousPiece.classList.remove("hightlightYellow");
-    const currentPiece = document.getElementById(id);
-    currentPiece.innerHTML = previousPiece.innerHTML;
-    previousPiece.innerHTML = "";
-    piece.current_position = id;
-    clearHightlight();
-}
-
 function selfHighlight(piece) {
     document
         .getElementById(piece.current_position)
@@ -166,6 +145,5 @@ export {
     renderHightlight,
     clearHightlight,
     selfHighlight,
-    moveElement,
     globalStateRender,
 };
