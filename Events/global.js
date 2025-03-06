@@ -14,6 +14,7 @@ import {
     checkWeatherPieceExistsOrNot,
     giveRookHighlightIds,
     giveKnightHighlightIds,
+    giveQueenHighlightIds,
 } from "../Helper/commonHelper.js";
 
 //подсветить или нет (стейт)
@@ -406,6 +407,236 @@ function whiteKnightClick(square) {
     hightlightSquareIds.forEach(element => {
         checkPieceOfOpponentOnElement(element, "white");
     });
+
+    globalStateRender();
+}
+
+//логика белого ферзя
+function whiteQueenClick(square) {
+    const piece = square.piece;
+
+    if (piece == selfHighlightState) {
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    if (square.captureHighlight) {
+        // слон хавает других
+        moveElement(selfHighlightState, piece.current_position);
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    //очистить всю доску от подсветок
+    clearPreviousSelfHighlight(selfHighlightState);
+    clearHighlightLocal();
+
+    //подсветка фигуры при клике
+    selfHighlight(piece);
+    hightlight_state = true;
+    selfHighlightState = piece;
+
+    //фигура для динамического движения
+    moveState = piece;
+
+    const current_pos = piece.current_position;
+    const flatArray = globalState.flat();
+
+    let hightlightSquareIds = giveQueenHighlightIds(current_pos);
+    let temp = [];
+
+    const {
+        bottomLeft,
+        topLeft,
+        bottomRight,
+        topRight,
+        top,
+        right,
+        left,
+        bottom,
+    } = hightlightSquareIds;
+
+    let result = [];
+    result.push(checkSquareCaptureId(bottomLeft));
+    result.push(checkSquareCaptureId(topLeft));
+    result.push(checkSquareCaptureId(bottomRight));
+    result.push(checkSquareCaptureId(topRight));
+    result.push(checkSquareCaptureId(top));
+    result.push(checkSquareCaptureId(right));
+    result.push(checkSquareCaptureId(left));
+    result.push(checkSquareCaptureId(bottom));
+
+    //для темп
+    temp.push(bottomLeft);
+    temp.push(topLeft);
+    temp.push(bottomRight);
+    temp.push(topRight);
+    temp.push(top);
+    temp.push(right);
+    temp.push(left);
+    temp.push(bottom);
+
+    // hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
+    hightlightSquareIds = result.flat();
+
+    hightlightSquareIds.forEach(hightlight => {
+        const element = keySquareMapper[hightlight];
+        element.highlight = true;
+    });
+
+    hightlightSquareIds.forEach(hightlight => {
+        const element = keySquareMapper[hightlight];
+        element.highlight = true;
+    });
+
+    let captureIds = [];
+
+    for (let index = 0; index < temp.length; index++) {
+        const arr = temp[index];
+
+        for (let j = 0; j < arr.length; j++) {
+            const element = arr[j];
+
+            let checkPieceResult = checkWeatherPieceExistsOrNot(element);
+            if (
+                checkPieceResult &&
+                checkPieceResult.piece &&
+                checkPieceResult.piece.piece_name
+                    .toLowerCase()
+                    .includes("white")
+            ) {
+                break;
+            }
+
+            if (checkPieceOfOpponentOnElement(element, "white")) {
+                break;
+            }
+        }
+    }
+
+    // let captureIds = [col1, col2];
+    // console.log(hightlightSquareIds);
+
+    // captureIds.forEach(element => {
+    //     checkPieceOfOpponentOnElement(element, "white");
+    // });
+
+    globalStateRender();
+}
+
+//логика черного ферзя
+function blackQueenClick(square) {
+    const piece = square.piece;
+
+    if (piece == selfHighlightState) {
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    if (square.captureHighlight) {
+        // слон хавает других
+        moveElement(selfHighlightState, piece.current_position);
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    //очистить всю доску от подсветок
+    clearPreviousSelfHighlight(selfHighlightState);
+    clearHighlightLocal();
+
+    //подсветка фигуры при клике
+    selfHighlight(piece);
+    hightlight_state = true;
+    selfHighlightState = piece;
+
+    //фигура для динамического движения
+    moveState = piece;
+
+    const current_pos = piece.current_position;
+    const flatArray = globalState.flat();
+
+    let hightlightSquareIds = giveQueenHighlightIds(current_pos);
+    let temp = [];
+
+    const {
+        bottomLeft,
+        topLeft,
+        bottomRight,
+        topRight,
+        top,
+        right,
+        left,
+        bottom,
+    } = hightlightSquareIds;
+
+    let result = [];
+    result.push(checkSquareCaptureId(bottomLeft));
+    result.push(checkSquareCaptureId(topLeft));
+    result.push(checkSquareCaptureId(bottomRight));
+    result.push(checkSquareCaptureId(topRight));
+    result.push(checkSquareCaptureId(top));
+    result.push(checkSquareCaptureId(right));
+    result.push(checkSquareCaptureId(left));
+    result.push(checkSquareCaptureId(bottom));
+
+    //для темп
+    temp.push(bottomLeft);
+    temp.push(topLeft);
+    temp.push(bottomRight);
+    temp.push(topRight);
+    temp.push(top);
+    temp.push(right);
+    temp.push(left);
+    temp.push(bottom);
+
+    // hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
+    hightlightSquareIds = result.flat();
+
+    hightlightSquareIds.forEach(hightlight => {
+        const element = keySquareMapper[hightlight];
+        element.highlight = true;
+    });
+
+    hightlightSquareIds.forEach(hightlight => {
+        const element = keySquareMapper[hightlight];
+        element.highlight = true;
+    });
+
+    let captureIds = [];
+
+    for (let index = 0; index < temp.length; index++) {
+        const arr = temp[index];
+
+        for (let j = 0; j < arr.length; j++) {
+            const element = arr[j];
+
+            let checkPieceResult = checkWeatherPieceExistsOrNot(element);
+            if (
+                checkPieceResult &&
+                checkPieceResult.piece &&
+                checkPieceResult.piece.piece_name
+                    .toLowerCase()
+                    .includes("black")
+            ) {
+                break;
+            }
+
+            if (checkPieceOfOpponentOnElement(element, "black")) {
+                break;
+            }
+        }
+    }
+
+    // let captureIds = [col1, col2];
+    // console.log(hightlightSquareIds);
+
+    // captureIds.forEach(element => {
+    //     checkPieceOfOpponentOnElement(element, "white");
+    // });
 
     globalStateRender();
 }
@@ -813,6 +1044,10 @@ function GlobalEvent() {
                 whiteKnightClick(square);
             } else if (square.piece.piece_name == "black_knight") {
                 blackKnightClick(square);
+            } else if (square.piece.piece_name == "white_queen") {
+                whiteQueenClick(square);
+            } else if (square.piece.piece_name == "black_queen") {
+                blackQueenClick(square);
             }
         } else {
             const childElementsOfclickedEl = Array.from(

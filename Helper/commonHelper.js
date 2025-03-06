@@ -20,7 +20,6 @@ function checkPieceOfOpponentOnElement(id, color) {
 }
 
 //функция для проверки фигуры перед шахом (чтобы шах не сработал когда впереди фигура)
-
 function checkWeatherPieceExistsOrNot(squareId) {
     const square = keySquareMapper[squareId];
 
@@ -353,6 +352,24 @@ function giveKnightHighlightIds(id) {
     return [...top(), ...bottom(), ...left(), ...right()];
 }
 
+//функция для подсветки ходов ферзя
+function giveQueenHighlightIds(id) {
+    const rookMoves = giveRookHighlightIds(id);
+    const bishopMoves = giveBishopHighlightIds(id);
+
+    return {
+        left: rookMoves.left,
+        right: rookMoves.right,
+        top: rookMoves.top,
+        bottom: rookMoves.bottom,
+
+        topLeft: bishopMoves.topLeft,
+        bottomLeft: bishopMoves.bottomLeft,
+        topRight: bishopMoves.topRight,
+        bottomRight: bishopMoves.bottomRight,
+    };
+}
+
 export {
     checkPieceOfOpponentOnElement,
     checkSquareCaptureId,
@@ -360,4 +377,5 @@ export {
     checkWeatherPieceExistsOrNot,
     giveRookHighlightIds,
     giveKnightHighlightIds,
+    giveQueenHighlightIds,
 };
