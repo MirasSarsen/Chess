@@ -22,6 +22,26 @@ function changeTurn() {
     inTurn = inTurn === "white" ? "black" : "white";
 }
 
+function captureInTurn(square) {
+    const piece = square.piece;
+
+    if (piece == selfHighlightState) {
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    if (square.captureHighlight) {
+        // фигура хавает других
+        moveElement(selfHighlightState, piece.current_position);
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    return;
+}
+
 //динамическое передвижение фигур благодаря айдишникам
 function moveElement(piece, id) {
     changeTurn();
@@ -1125,31 +1145,45 @@ function GlobalEvent() {
     ROOT_DIV.addEventListener("click", function (event) {
         if (event.target.localName === "img") {
             const clickId = event.target.parentNode.id;
+
             const square = keySquareMapper[clickId];
+
+            if (square && square.piece && square.piece.piece_name) {
+                if (
+                    (square.piece.piece_name.includes("white") &&
+                        inTurn === "black") ||
+                    (square.piece.piece_name.includes("black") &&
+                        inTurn === "white")
+                ) {
+                    captureInTurn(square);
+                    return;
+                }
+            }
+
             if (square.piece.piece_name == "white_pawn") {
-                whitePawnClick(square);
+                if (inTurn == "white") whitePawnClick(square);
             } else if (square.piece.piece_name == "black_pawn") {
-                blackPawnClick(square);
+                if (inTurn == "black") blackPawnClick(square);
             } else if (square.piece.piece_name == "white_bishop") {
-                whiteBishopClick(square);
+                if (inTurn == "white") whiteBishopClick(square);
             } else if (square.piece.piece_name == "black_bishop") {
-                blackBishopClick(square);
+                if (inTurn == "black") blackBishopClick(square);
             } else if (square.piece.piece_name == "white_rook") {
-                whiteRookClick(square);
+                if (inTurn == "white") whiteRookClick(square);
             } else if (square.piece.piece_name == "black_rook") {
-                blackRookClick(square);
+                if (inTurn == "black") blackRookClick(square);
             } else if (square.piece.piece_name == "white_knight") {
-                whiteKnightClick(square);
+                if (inTurn == "white") whiteKnightClick(square);
             } else if (square.piece.piece_name == "black_knight") {
-                blackKnightClick(square);
+                if (inTurn == "black") blackKnightClick(square);
             } else if (square.piece.piece_name == "white_queen") {
-                whiteQueenClick(square);
+                if (inTurn == "white") whiteQueenClick(square);
             } else if (square.piece.piece_name == "black_queen") {
-                blackQueenClick(square);
+                if (inTurn == "black") blackQueenClick(square);
             } else if (square.piece.piece_name == "white_king") {
-                whiteKingClick(square);
+                if (inTurn == "white") whiteKingClick(square);
             } else if (square.piece.piece_name == "black_king") {
-                blackKingClick(square);
+                if (inTurn == "black") blackKingClick(square);
             }
         } else {
             const childElementsOfclickedEl = Array.from(
