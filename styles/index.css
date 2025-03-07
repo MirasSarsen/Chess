@@ -32,7 +32,7 @@ body {
 }
 
 .piece {
-    width: 90%;
+    width: 100%;
     cursor: pointer;
 }
 
