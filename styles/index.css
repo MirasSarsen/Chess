@@ -41,9 +41,9 @@ body {
 }
 
 .hightlight {
-    width: 25px;
+    width: 35%;
     display: block;
-    height: 25px;
+    height: 35%;
     margin: auto;
     border-radius: 50%;
     background-color: #7B61FF;
