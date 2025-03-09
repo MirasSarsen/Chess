@@ -4,6 +4,7 @@ import {
     globalStateRender,
     clearHightlight,
     selfHighlight,
+    globalPiece,
 } from "../Render/main.js";
 import {
     checkPieceOfOpponentOnElement,
@@ -14,12 +15,83 @@ import {
     giveKnightHighlightIds,
     giveQueenHighlightIds,
     giveKingHighlightIds,
+    giveKingCaptureIds,
+    giveKnightCaptureIds,
+    giveBishopCaptureIds,
+    giveRookCaptureIds,
+    giveQueenCaptureIds,
 } from "../Helper/commonHelper.js";
+import logMoves from "../Helper/logging.js";
 
+//подсветить или нет (стейт)
+let hightlight_state = false;
 let inTurn = "white";
+let whoInCheck = null;
 
 function changeTurn() {
     inTurn = inTurn === "white" ? "black" : "white";
+}
+
+function checkForCheck() {
+    if (inTurn === "black") {
+        const whiteKingCurrentPosition =
+            globalPiece.white_king.current_position;
+        const knight_1 = globalPiece.black_knight_1.current_position;
+        const knight_2 = globalPiece.black_knight_2.current_position;
+        const king = globalPiece.black_king.current_position;
+        const bishop_1 = globalPiece.black_bishop_1.current_position;
+        const bishop_2 = globalPiece.black_bishop_2.current_position;
+        const rook_1 = globalPiece.black_rook_1.current_position;
+        const rook_2 = globalPiece.black_rook_2.current_position;
+        const queen = globalPiece.black_queen.current_position;
+
+        let finalCheckList = [];
+        finalCheckList.push(giveKnightCaptureIds(knight_1, inTurn));
+        finalCheckList.push(giveKnightCaptureIds(knight_2, inTurn));
+        finalCheckList.push(giveKingCaptureIds(king, inTurn));
+        finalCheckList.push(giveBishopCaptureIds(bishop_1, inTurn));
+        finalCheckList.push(giveBishopCaptureIds(bishop_2, inTurn));
+        finalCheckList.push(giveRookCaptureIds(rook_1, inTurn));
+        finalCheckList.push(giveRookCaptureIds(rook_2, inTurn));
+        finalCheckList.push(giveQueenCaptureIds(queen, inTurn));
+
+        finalCheckList = finalCheckList.flat();
+        const checkOrNot = finalCheckList.find(
+            element => element === whiteKingCurrentPosition
+        );
+        if (checkOrNot) {
+            whoInCheck = "white";
+        }
+    } else {
+        const blackKingCurrentPosition =
+            globalPiece.black_king.current_position;
+        const knight_1 = globalPiece.white_knight_1.current_position;
+        const knight_2 = globalPiece.white_knight_2.current_position;
+        const king = globalPiece.white_king.current_position;
+        const bishop_1 = globalPiece.white_bishop_1.current_position;
+        const bishop_2 = globalPiece.white_bishop_2.current_position;
+        const rook_1 = globalPiece.white_rook_1.current_position;
+        const rook_2 = globalPiece.white_rook_2.current_position;
+        const queen = globalPiece.white_queen.current_position;
+
+        let finalCheckList = [];
+        finalCheckList.push(giveKnightCaptureIds(knight_1, inTurn));
+        finalCheckList.push(giveKnightCaptureIds(knight_2, inTurn));
+        finalCheckList.push(giveKingCaptureIds(king, inTurn));
+        finalCheckList.push(giveBishopCaptureIds(bishop_1, inTurn));
+        finalCheckList.push(giveBishopCaptureIds(bishop_2, inTurn));
+        finalCheckList.push(giveRookCaptureIds(rook_1, inTurn));
+        finalCheckList.push(giveRookCaptureIds(rook_2, inTurn));
+        finalCheckList.push(giveQueenCaptureIds(queen, inTurn));
+
+        finalCheckList = finalCheckList.flat();
+        const checkOrNot = finalCheckList.find(
+            element => element === blackKingCurrentPosition
+        );
+        if (checkOrNot) {
+            whoInCheck = "black";
+        }
+    }
 }
 
 function captureInTurn(square) {
@@ -44,7 +116,10 @@ function captureInTurn(square) {
 
 //динамическое передвижение фигур благодаря айдишникам
 function moveElement(piece, id) {
-    changeTurn();
+    logMoves(
+        { from: piece.current_position, to: id, piece: piece.piece_name },
+        inTurn
+    );
     const flatData = globalState.flat();
 
     flatData.forEach(el => {
@@ -52,20 +127,28 @@ function moveElement(piece, id) {
             delete el.piece;
         }
         if (el.id == id) {
+            if (el.piece) {
+                el.piece.current_position = null;
+            }
             el.piece = piece;
         }
     });
+    clearHightlight();
     const previousPiece = document.getElementById(piece.current_position);
+    piece.current_position = null;
     previousPiece.classList.remove("hightlightYellow");
     const currentPiece = document.getElementById(id);
-    currentPiece.innerHTML = previousPiece.innerHTML;
-    previousPiece.innerHTML = "";
-    piece.current_position = id;
-    clearHightlight();
-}
+    currentPiece.innerHTML += previousPiece.querySelector("img").outerHTML;
+    const pieceImage = previousPiece.querySelector("img");
+    if (pieceImage) {
+        currentPiece.innerHTML = ""; // Очищаем поле перед вставкой
+        currentPiece.appendChild(pieceImage);
+    }
 
-//подсветить или нет (стейт)
-let hightlight_state = false;
+    piece.current_position = id;
+    checkForCheck();
+    changeTurn();
+}
 
 //правильное состояние подсветки (то есть, чтобы очищать фон с посл клика)
 let selfHighlightState = null;
@@ -216,11 +299,6 @@ function whiteBishopClick(square) {
 
     // hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
     hightlightSquareIds = result.flat();
-
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
-    });
 
     hightlightSquareIds.forEach(hightlight => {
         const element = keySquareMapper[hightlight];

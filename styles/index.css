@@ -1,10 +1,13 @@
 body {
     background-color: #302e2b;
+    justify-content: center;
+    gap: 2vw;
 }
 
 #root {
+    display: flex;
+    flex-direction: column;
     width: fit-content;
-    margin: auto;
 }
 
 .squareRow {
@@ -14,9 +17,7 @@ body {
 .square {
     width: 75px;
     height: 75px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: relative;
 }
 
 .white {
@@ -41,11 +42,53 @@ body {
 }
 
 .hightlight {
-    width: 35%;
+    width: 45%;
     display: block;
-    height: 35%;
+    height: 45%;
     margin: auto;
     border-radius: 50%;
     background-color: #7B61FF;
-    margin-top: 25px;
+    margin-top: 20px;
+}
+
+.labelId {
+    position: absolute;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    left: 2px;
+}
+
+.white-label-id {
+    color: #B7C0D8;
+}
+
+.black-label-id {
+    color: #E8EDF9;
+}
+
+.d-flex {
+    display: flex;
+}
+
+#move_logger {
+    width: 20vw;
+    height: 600px;
+    background-color: #262522;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    padding: 10px;
+    overflow-y: auto;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+#move_logger ol {
+    padding-left: 20px;
+}
+
+#move_logger li {
+    margin-bottom: 5px;
+    list-style-type: decimal;
 }

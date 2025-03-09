@@ -19,6 +19,21 @@ function checkPieceOfOpponentOnElement(id, color) {
     return false;
 }
 
+//функция шаха если фигура рядом с противником
+function checkPieceOfOpponentOnElementNoDom(id, color) {
+    const opponentColor = color === "white" ? "black" : "white";
+
+    const element = keySquareMapper[id];
+
+    if (!element) return false;
+
+    if (element.piece && element.piece.piece_name.includes(opponentColor)) {
+        return true;
+    }
+
+    return false;
+}
+
 //функция для проверки фигуры перед шахом (чтобы шах не сработал когда впереди фигура)
 function checkWeatherPieceExistsOrNot(squareId) {
     const square = keySquareMapper[squareId];
@@ -117,6 +132,102 @@ function giveBishopHighlightIds(id) {
         topRight: topRight(id),
         bottomRight: bottomRight(id),
     };
+}
+//функция для подсветки шахов слона
+function giveBishopCaptureIds(id, color) {
+    if (!id) {
+        return [];
+    }
+
+    let hightlightSquareIds = giveBishopHighlightIds(id);
+    let temp = [];
+
+    const { bottomLeft, topLeft, bottomRight, topRight } = hightlightSquareIds;
+    let returnArr = [];
+
+    //для темп
+    temp.push(bottomLeft);
+    temp.push(topLeft);
+    temp.push(bottomRight);
+    temp.push(topRight);
+
+    for (let index = 0; index < temp.length; index++) {
+        const arr = temp[index];
+
+        for (let j = 0; j < arr.length; j++) {
+            const element = arr[j];
+
+            let checkPieceResult = checkWeatherPieceExistsOrNot(element);
+            if (
+                checkPieceResult &&
+                checkPieceResult.piece &&
+                checkPieceResult.piece.piece_name.toLowerCase().includes(color)
+            ) {
+                break;
+            }
+
+            if (checkPieceOfOpponentOnElementNoDom(element, color)) {
+                returnArr.push(element);
+                break;
+            }
+        }
+    }
+
+    return returnArr;
+}
+//функция для подсветки шахов слона
+function giveRookCaptureIds(id, color) {
+    if (!id) {
+        return [];
+    }
+
+    let hightlightSquareIds = giveRookHighlightIds(id);
+    let temp = [];
+
+    const { bottom, top, right, left } = hightlightSquareIds;
+    let returnArr = [];
+
+    //для темп
+    temp.push(bottom);
+    temp.push(top);
+    temp.push(right);
+    temp.push(left);
+
+    for (let index = 0; index < temp.length; index++) {
+        const arr = temp[index];
+
+        for (let j = 0; j < arr.length; j++) {
+            const element = arr[j];
+
+            let checkPieceResult = checkWeatherPieceExistsOrNot(element);
+            if (
+                checkPieceResult &&
+                checkPieceResult.piece &&
+                checkPieceResult.piece.piece_name.toLowerCase().includes(color)
+            ) {
+                break;
+            }
+
+            if (checkPieceOfOpponentOnElementNoDom(element, color)) {
+                returnArr.push(element);
+                break;
+            }
+        }
+    }
+
+    return returnArr;
+}
+
+//функция для подсветки шахов слона
+function giveQueenCaptureIds(id, color) {
+    if (!id) {
+        return [];
+    }
+
+    let returnArr = [];
+    returnArr.push(giveBishopCaptureIds(id, color));
+    returnArr.push(giveRookCaptureIds(id, color));
+    return returnArr.flat();
 }
 
 //функция для подсветки ходов ладьи
@@ -400,6 +511,40 @@ function giveKingHighlightIds(id) {
     return returnResult;
 }
 
+//функция для подсветки шахов короля
+function giveKingCaptureIds(id, color) {
+    if (!id) {
+        return [];
+    }
+
+    let result = giveKingHighlightIds(id);
+    result = Object.values(result).flat();
+    result = result.filter(element => {
+        if (checkPieceOfOpponentOnElementNoDom(element, color)) {
+            return true;
+        }
+    });
+
+    return result;
+}
+
+//функция для подсветки ходов коня
+function giveKnightCaptureIds(id, color) {
+    if (!id) {
+        return [];
+    }
+
+    let returnArr = giveKnightHighlightIds(id);
+
+    returnArr = returnArr.filter(element => {
+        if (checkPieceOfOpponentOnElementNoDom(element, color)) {
+            return true;
+        }
+    });
+
+    return returnArr;
+}
+
 export {
     checkPieceOfOpponentOnElement,
     checkSquareCaptureId,
@@ -409,4 +554,9 @@ export {
     giveKnightHighlightIds,
     giveQueenHighlightIds,
     giveKingHighlightIds,
+    giveKingCaptureIds,
+    giveKnightCaptureIds,
+    giveRookCaptureIds,
+    giveBishopCaptureIds,
+    giveQueenCaptureIds,
 };
