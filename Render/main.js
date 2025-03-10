@@ -60,10 +60,10 @@ function initGameRender(data) {
             squareDiv.classList.add(square.color, "square");
 
             //подпись клеток
-            const labelId = document.createElement("span");
-            labelId.textContent = square.id;
-            labelId.classList.add("labelId", `${square.color}-label-id`);
-            squareDiv.append(labelId);
+            // const labelId = document.createElement("span");
+            // labelId.textContent = square.id;
+            // labelId.classList.add("labelId", `${square.color}-label-id`);
+            // squareDiv.append(labelId);
 
             // рендер белых
             if (square.id[1] == 2) {

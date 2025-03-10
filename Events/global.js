@@ -21,7 +21,8 @@ import {
     giveRookCaptureIds,
     giveQueenCaptureIds,
 } from "../Helper/commonHelper.js";
-import logMoves from "../Helper/logging.js";
+// import logMoves from "../Helper/logging.js";
+import pawnPromotion from "../Helper/modalCreator.js";
 
 //подсветить или нет (стейт)
 let hightlight_state = false;
@@ -116,6 +117,8 @@ function captureInTurn(square) {
 
 //динамическое передвижение фигур благодаря айдишникам
 function moveElement(piece, id) {
+    pawnPromotion("white");
+
     logMoves(
         { from: piece.current_position, to: id, piece: piece.piece_name },
         inTurn

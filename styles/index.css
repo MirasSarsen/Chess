@@ -71,7 +71,7 @@ body {
     display: flex;
 }
 
-#move_logger {
+/* #move_logger {
     width: 20vw;
     height: 600px;
     background-color: #262522;
@@ -82,7 +82,7 @@ body {
     overflow-y: auto;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
+} */
 
 #move_logger ol {
     padding-left: 20px;
@@ -91,4 +91,39 @@ body {
 #move_logger li {
     margin-bottom: 5px;
     list-style-type: decimal;
+}
+
+.modal {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+
+    img {
+        width: 100px;
+        border: 5px solid transparent;
+        box-sizing: border-box;
+    }
+
+    img:hover {
+        border: 5px solid #7B61FF;
+        cursor: pointer;
+    }
+}
+
+.blur {
+    filter: blur(15px);
+}
+
+.modal p {
+    font-family: sans-serif;
+    font-size: 40px;
+    padding: 4px 8px;
+    background-color: #2106a9;
+    color: white;
 }
