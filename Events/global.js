@@ -115,14 +115,24 @@ function captureInTurn(square) {
     return;
 }
 
+function checkForPawnPromotion(piece, id) {
+    if (!piece.piece_name.toLowerCase().includes("pawn")) return false;
+
+    const row = id[id.length - 1]; // Последняя цифра в id (номер строки)
+
+    if (inTurn === "white" && row === "8") return true;
+    if (inTurn === "black" && row === "1") return true;
+
+    return false;
+}
+
 //динамическое передвижение фигур благодаря айдишникам
 function moveElement(piece, id) {
-    pawnPromotion("white");
-
-    logMoves(
-        { from: piece.current_position, to: id, piece: piece.piece_name },
-        inTurn
-    );
+    const shouldPromote = checkForPawnPromotion(piece, id);
+    // logMoves(
+    //     { from: piece.current_position, to: id, piece: piece.piece_name },
+    //     inTurn
+    // );
     const flatData = globalState.flat();
 
     flatData.forEach(el => {
@@ -149,6 +159,12 @@ function moveElement(piece, id) {
     }
 
     piece.current_position = id;
+
+    if (shouldPromote) {
+        // Теперь проверяем реальное значение true/false
+        pawnPromotion(inTurn);
+    }
+
     checkForCheck();
     changeTurn();
 }

@@ -29,13 +29,14 @@ function pawnPromotion(color) {
     queen.src = `../images/pieces/${color}/queen.png`;
 
     const imageContainer = document.createElement("div");
+    imageContainer.classList.add("promotion-container");
     imageContainer.appendChild(rook);
     imageContainer.appendChild(knight);
     imageContainer.appendChild(bishop);
     imageContainer.appendChild(queen);
 
     const msg = document.createElement("p");
-    msg.textContent = "Ваша пешка превращена";
+    msg.textContent = "Ваша пешка превратиться в:";
 
     const finalContainer = document.createElement("div");
     finalContainer.appendChild(msg);

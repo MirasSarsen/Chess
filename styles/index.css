@@ -103,15 +103,30 @@ body {
     bottom: 0;
     right: 0;
     left: 0;
+    width: 100%;
 
-    img {
-        width: 100px;
-        border: 5px solid transparent;
+    /* Контейнер для выбора фигуры */
+    .promotion-container {
+        display: flex;
+        justify-content: center;
+        /* Центрируем по горизонтали */
+        gap: 10px;
+        /* Расстояние между фигурами */
+        padding: 10px;
+    }
+
+    .promotion-container img {
+        width: 120px;
+        /* Задаем фиксированный размер */
+        height: 120px;
+        border: 3px solid transparent;
         box-sizing: border-box;
     }
 
-    img:hover {
-        border: 5px solid #7B61FF;
+    .promotion-container img:hover {
+        transform: scale(1.2);
+        /* Увеличение при наведении */
+        border: 3px solid #7B61FF;
         cursor: pointer;
     }
 }
@@ -122,7 +137,7 @@ body {
 
 .modal p {
     font-family: sans-serif;
-    font-size: 40px;
+    font-size: 35px;
     padding: 4px 8px;
     background-color: #2106a9;
     color: white;
