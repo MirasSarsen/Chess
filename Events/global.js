@@ -130,7 +130,7 @@ function checkForPawnPromotion(piece, id) {
     return false;
 }
 
-function test(piece, id) {
+function callbackPawnPromotion(piece, id) {
     const realPiece = piece(id);
     const currentSquare = keySquareMapper[id];
     piece.current_position = id;
@@ -189,7 +189,7 @@ function moveElement(piece, id) {
     piece.current_position = id;
 
     if (shouldPromote) {
-        pawnPromotion(inTurn, test, id);
+        pawnPromotion(inTurn, callbackPawnPromotion, id);
     }
 
     checkForCheck();
