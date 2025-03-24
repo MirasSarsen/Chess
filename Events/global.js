@@ -115,14 +115,38 @@ function captureInTurn(square) {
     return;
 }
 
+function checkForPawnPromotion(piece, id) {
+    if (!piece?.piece_name) return false; // Если фигура undefined или не имеет имени
+
+    if (piece.piece_name.toLowerCase().includes("pawn")) {
+        const row = id[id.length - 1]; // Последняя цифра в id (номер строки)
+        if (
+            (inTurn === "white" && row === "8") ||
+            (inTurn === "black" && row === "1")
+        ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function test(piece, id) {
+    const realPiece = piece(id);
+    const currentSquare = keySquareMapper[id];
+    piece.current_position = id;
+    currentSquare.piece = realPiece;
+    const image = document.createElement("img");
+    image.src = realPiece.img;
+    image.classList.add("piece");
+
+    const currentElement = document.getElementById(id);
+    currentElement.innerHTML = "";
+    currentElement.append(image);
+}
+
 //динамическое передвижение фигур благодаря айдишникам
 function moveElement(piece, id) {
-    pawnPromotion("white");
-
-    logMoves(
-        { from: piece.current_position, to: id, piece: piece.piece_name },
-        inTurn
-    );
+    const shouldPromote = checkForPawnPromotion(piece, id);
     const flatData = globalState.flat();
 
     flatData.forEach(el => {
@@ -136,19 +160,38 @@ function moveElement(piece, id) {
             el.piece = piece;
         }
     });
+
     clearHightlight();
+
+    // Получаем элемент предыдущей позиции
     const previousPiece = document.getElementById(piece.current_position);
-    piece.current_position = null;
-    previousPiece.classList.remove("hightlightYellow");
-    const currentPiece = document.getElementById(id);
-    currentPiece.innerHTML += previousPiece.querySelector("img").outerHTML;
-    const pieceImage = previousPiece.querySelector("img");
-    if (pieceImage) {
-        currentPiece.innerHTML = ""; // Очищаем поле перед вставкой
-        currentPiece.appendChild(pieceImage);
+    if (previousPiece) {
+        previousPiece.classList.remove("hightlightYellow");
+
+        // Получаем изображение фигуры
+        const pieceImage = previousPiece.querySelector("img");
+        if (pieceImage) {
+            // Получаем элемент текущей позиции
+            const currentPiece = document.getElementById(id);
+            if (currentPiece) {
+                currentPiece.innerHTML = ""; // Очищаем поле перед вставкой
+                currentPiece.appendChild(pieceImage);
+            } else {
+                console.error(`Элемент с id="${id}" не найден.`);
+            }
+        } else {
+            console.error("Фигура в previousPiece не найдена.");
+        }
+    } else {
+        console.error(`Элемент с id="${piece.current_position}" не найден.`);
     }
 
     piece.current_position = id;
+
+    if (shouldPromote) {
+        pawnPromotion(inTurn, test, id);
+    }
+
     checkForCheck();
     changeTurn();
 }
