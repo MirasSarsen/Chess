@@ -148,8 +148,21 @@ function callbackPawnPromotion(piece, id) {
 function moveElement(piece, id) {
     const shouldPromote = checkForPawnPromotion(piece, id);
 
-    if (piece.piece_name.includes("king")) {
-        console.log(piece);
+    if (
+        piece.piece_name.includes("king") ||
+        piece.piece_name.includes("rook")
+    ) {
+        piece.move = true;
+
+        if (
+            piece.piece_name.includes("king") &&
+            piece.piece_name.includes("white")
+        ) {
+            if (id === "c1" || id === "g1") {
+                let rook = keySquareMapper[id === "c1" ? "a1" : "h1"];
+                moveElement(rook.piece, id === "c1" ? "d1" : "f1");
+            }
+        }
     }
 
     const flatData = globalState.flat();
