@@ -156,6 +156,23 @@ function moveElement(piece, id) {
 
         if (
             piece.piece_name.includes("king") &&
+            piece.piece_name.includes("black")
+        ) {
+            if (id === "c8" || id === "g8") {
+                let rook = keySquareMapper[id === "c8" ? "a8" : "h8"];
+                moveElement(rook.piece, id === "c8" ? "d8" : "f8");
+            }
+        }
+    }
+
+    if (
+        piece.piece_name.includes("king") ||
+        piece.piece_name.includes("rook")
+    ) {
+        piece.move = true;
+
+        if (
+            piece.piece_name.includes("king") &&
             piece.piece_name.includes("white")
         ) {
             if (id === "c1" || id === "g1") {
@@ -821,6 +838,27 @@ function blackKingClick(square) {
     } = hightlightSquareIds;
 
     let result = [];
+
+    if (!piece.move) {
+        const rook1 = globalPiece.black_rook_1;
+        const rook2 = globalPiece.black_rook_2;
+        if (!rook1.move) {
+            const b8 = keySquareMapper["b8"];
+            const c8 = keySquareMapper["c8"];
+            const d8 = keySquareMapper["d8"];
+            if (!b8.piece && !c8.piece && !d8.piece) {
+                result.push("c8");
+            }
+        }
+        if (!rook2.move) {
+            const f8 = keySquareMapper["f8"];
+            const g8 = keySquareMapper["g8"];
+            if (!f8.piece && !g8.piece) {
+                result.push("g8");
+            }
+        }
+    }
+
     result.push(checkSquareCaptureId(bottomLeft));
     result.push(checkSquareCaptureId(topLeft));
     result.push(checkSquareCaptureId(bottomRight));
