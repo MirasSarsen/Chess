@@ -147,6 +147,11 @@ function callbackPawnPromotion(piece, id) {
 //динамическое передвижение фигур благодаря айдишникам
 function moveElement(piece, id) {
     const shouldPromote = checkForPawnPromotion(piece, id);
+
+    if (piece.piece_name.includes("king")) {
+        console.log(piece);
+    }
+
     const flatData = globalState.flat();
 
     flatData.forEach(el => {
@@ -674,6 +679,27 @@ function whiteKingClick(square) {
     } = hightlightSquareIds;
 
     let result = [];
+
+    if (!piece.move) {
+        const rook1 = globalPiece.white_rook_1;
+        const rook2 = globalPiece.white_rook_2;
+        if (!rook1.move) {
+            const b1 = keySquareMapper["b1"];
+            const c1 = keySquareMapper["c1"];
+            const d1 = keySquareMapper["d1"];
+            if (!b1.piece && !c1.piece && !d1.piece) {
+                result.push("c1");
+            }
+        }
+        if (!rook2.move) {
+            const f1 = keySquareMapper["f1"];
+            const g1 = keySquareMapper["g1"];
+            if (!f1.piece && !g1.piece) {
+                result.push("g1");
+            }
+        }
+    }
+
     result.push(checkSquareCaptureId(bottomLeft));
     result.push(checkSquareCaptureId(topLeft));
     result.push(checkSquareCaptureId(bottomRight));
