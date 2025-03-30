@@ -1,19 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
+</head>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Шахматная академия</title>
-    <link rel="stylesheet" href="styles/index.css">
+    <link rel="stylesheet" href="public/styles.css">
+    <link rel="icon" href="logo.png" type="image/png">
 </head>
 
-<body class="d-flex">
-    <div id="root"></div>
-    <div id="move_logger">
-        <ol></ol>
-    </div>
+<body>
+    <header>
+        <a href="#">
+            <img src="logo.png" alt="логотип" class="logo">
+        </a>
+
+        <div class="navbar">
+            <a href="/students">Ученики</a>
+            <a href="/trainers">Тренеры</a>
+            <a href="/schedule">Расписание</a>
+            <a href="/tournaments">Турниры</a>
+            <a href="/online-game">Онлайн-игра</a>
+        </div>
+    </header>
+    <main>
+        <h1>Добро пожаловать в Шахматную Академию</h1>
+        <section id="about">
+            <h2>О нас</h2>
+            <p>Наш сайт предоставляет удобные инструменты для управления шахматными занятиями, турнирами и рейтинговыми
+                таблицами.</p>
+        </section>
+        <section id="stats">
+            <h2>Рейтинги и результаты</h2>
+            <p>Актуальные рейтинги учеников и итоги турниров.</p>
+        </section>
+        <section id="play-online">
+            <h2>Играть в шахматы онлайн</h2>
+            <p>Сыграйте партию прямо на сайте!</p>
+            <a href="/online-game" class="btn">Начать игру</a>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 Шахматная Академия. Все права защищены.</p>
+    </footer>
 </body>
-<script type="module" src="./index.js"></script>
 
 </html>
