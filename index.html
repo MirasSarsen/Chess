@@ -1,4 +1,5 @@
-</head>
+<!DOCTYPE html>
+<html lang="ru">
 
 <head>
     <meta charset="UTF-8">
@@ -9,39 +10,75 @@
 </head>
 
 <body>
+
     <header>
         <a href="#">
             <img src="logo.png" alt="логотип" class="logo">
         </a>
-
-        <div class="navbar">
+        <nav class="navbar">
             <a href="/students">Ученики</a>
             <a href="/trainers">Тренеры</a>
             <a href="/schedule">Расписание</a>
             <a href="/tournaments">Турниры</a>
             <a href="/online-game">Онлайн-игра</a>
-        </div>
+        </nav>
     </header>
+
     <main>
-        <h1>Добро пожаловать в Шахматную Академию</h1>
-        <section id="about">
-            <h2>О нас</h2>
-            <p>Наш сайт предоставляет удобные инструменты для управления шахматными занятиями, турнирами и рейтинговыми
-                таблицами.</p>
+        <section class="hero">
+            <h1>Добро пожаловать в Шахматную Академию</h1>
+            <p>Обучение, турниры и онлайн-игра – всё в одном месте</p>
+            <a href="/online-game" class="button">Начать игру</a>
         </section>
-        <section id="stats">
-            <h2>Рейтинги и результаты</h2>
-            <p>Актуальные рейтинги учеников и итоги турниров.</p>
-        </section>
-        <section id="play-online">
-            <h2>Играть в шахматы онлайн</h2>
-            <p>Сыграйте партию прямо на сайте!</p>
-            <a href="/online-game" class="btn">Начать игру</a>
+
+        <section class="features">
+            <div class="feature">
+                <img src="public/images/learning.png" alt="Тренировки">
+                <h3>Обучение</h3>
+                <p>Изучайте стратегию и тактику с профессиональными тренерами.</p>
+            </div>
+            <div class="feature">
+                <img src="public/images/online-game.png" alt="Шахматы">
+                <h3>Онлайн-игра</h3>
+                <p>Сыграйте партию в шахматы в реальном времени против соперников.</p>
+            </div>
+            <div class="feature">
+                <img src="public/images/tournament.png" alt="Турниры">
+                <h3>Турниры</h3>
+                <p>Участвуйте в турнирах и повышайте свой рейтинг!</p>
+            </div>
         </section>
     </main>
+
     <footer>
-        <p>&copy; 2025 Шахматная Академия. Все права защищены.</p>
+        <div class="footer-column">
+            <h3>О НАС</h3>
+            <p>Шахматная Академия – место, где рождаются чемпионы!</p>
+            <div class="footer-social">
+                <a href="#"><img src="icons/whatsapp.png" alt="WhatsApp"></a>
+                <a href="https://www.instagram.com/chess.akadem/"><img src="icons/instagram.png" alt="Instagram"></a>
+                <a href="#"><img src="icons/2gis.png" alt="2gis"></a>
+            </div>
+        </div>
+        <div class="footer-column">
+            <h3>АКАДЕМИЯ</h3>
+            <a href="#">Новости</a>
+            <a href="#">Методика обучения</a>
+            <a href="#">История шахмат</a>
+        </div>
+        <div class="footer-column">
+            <h3>ПОДДЕРЖКА</h3>
+            <a href="#">Связаться с нами</a>
+            <a href="#">FAQ</a>
+            <a href="#">Техническая помощь</a>
+        </div>
+        <div class="footer-column">
+            <h3>КОНТАКТЫ</h3>
+            <p>Email: info@chessacademy.com</p>
+            <p>Тел: +7 (999) 123-45-67</p>
+        </div>
     </footer>
+
 </body>
 
 </html>

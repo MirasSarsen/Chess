@@ -35,19 +35,19 @@ class ModalCreator {
 function pawnPromotion(color, callback, id) {
     const rook = document.createElement("img");
     rook.onclick = rookCallback;
-    rook.src = `../images/pieces/${color}/rook.png`;
+    rook.src = `./images/pieces/${color}/rook.png`;
 
     const knight = document.createElement("img");
     knight.onclick = knightCallback;
-    knight.src = `../images/pieces/${color}/knight.png`;
+    knight.src = `./images/pieces/${color}/knight.png`;
 
     const bishop = document.createElement("img");
     bishop.onclick = bishopCallback;
-    bishop.src = `../images/pieces/${color}/bishop.png`;
+    bishop.src = `./images/pieces/${color}/bishop.png`;
 
     const queen = document.createElement("img");
     queen.onclick = queenCallback;
-    queen.src = `../images/pieces/${color}/queen.png`;
+    queen.src = `./images/pieces/${color}/queen.png`;
 
     const imageContainer = document.createElement("div");
     imageContainer.classList.add("promotion-container");
