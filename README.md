@@ -14,8 +14,8 @@
 ## Технологии
 - **Frontend:** HTML, CSS, JavaScript
 - **WebSockets:** Будет реализовано в онлайн-режиме
-- **Backend:** Планируется на Node.js
-- **Database:** MongoDB (в планах)
+- **Backend:** реализуется на Node.js + WebSocket
+- **Database:** MongoDB (запланировано)
 
 ## Установка и запуск
 Для использования команды git, необходимо скачать и установить её с официального сайта: https://git-scm.com/downloads
