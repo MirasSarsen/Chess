@@ -217,9 +217,21 @@ footer {
     margin-top: 10px;
 }
 
-.footer-social a img {
-    width: 24px;
-    height: 24px;
+.footer-social img {
+    width: 45px;
+    height: 45px;
+    transition: transform 0.2s ease;
+}
+
+.footer-social .instagram {
+    width: 55px;
+    height: 55px;
+    margin-top: -5px;
+}
+
+.footer-social img:hover {
+    transform: scale(1.2);
+    filter: brightness(1.2);
 }
 
 /* Темная тема */
