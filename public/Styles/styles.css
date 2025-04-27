@@ -9,6 +9,17 @@
     --border-radius: 8px;
 }
 
+.burger {
+    display: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--text-color-inheader);
+    font-size: 2rem;
+    user-select: none;
+    padding: 10px;
+    margin-left: auto;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background: var(--bg-color);

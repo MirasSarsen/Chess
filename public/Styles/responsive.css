@@ -1,0 +1,163 @@
+@media (max-width: 575px) {
+    * {
+        box-sizing: border-box;
+    }
+
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .logo {
+        height: 70px;
+        width: auto;
+    }
+
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+
+    .burger {
+        display: block;
+        font-size: 55px;
+    }
+
+    .navbar {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .navbar.active {
+        display: flex;
+    }
+
+    .navbar a {
+        margin: 10px 0;
+    }
+
+    .navbar a {
+        margin: 10px 0;
+    }
+
+    .hero h1 {
+        font-size: 1.8rem;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+
+    .features {
+        flex-direction: column;
+
+        .feature {
+            margin-top: 20px;
+        }
+    }
+
+    .section-container {
+        flex-direction: column;
+    }
+
+    footer {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .footer-social {
+        justify-content: center;
+    }
+
+    #root {
+        margin-top: 20px;
+        max-width: 90vw;
+        margin-left: 20px;
+
+        .squareRow {
+            .white.square {
+                display: flex;
+                width: 15vw;
+                height: 15vw;
+            }
+
+            .black.square {
+                display: flex;
+                width: 15vw;
+                height: 15vw;
+            }
+        }
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+    header {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .navbar {
+        margin-top: 10px;
+    }
+
+    .hero h1 {
+        font-size: 2rem;
+    }
+
+    .features {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .section-container {
+        flex-direction: column;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .features {
+        flex-wrap: wrap;
+    }
+
+    .feature {
+        flex: 0 0 45%;
+        margin: 10px 0;
+    }
+
+    .section-container {
+        flex-wrap: wrap;
+    }
+
+    .section-card {
+        flex: 0 0 45%;
+        margin: 10px 0;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .features {
+        flex-wrap: wrap;
+    }
+
+    .feature {
+        flex: 0 0 30%;
+    }
+
+    .section-container {
+        flex-wrap: wrap;
+    }
+
+    .section-card {
+        flex: 0 0 30%;
+    }
+}
+
+@media (min-width: 1200px) {
+
+    .hero h1 {
+        font-size: 3rem;
+    }
+}
