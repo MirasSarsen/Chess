@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренеры | Шахматная Академия</title>
+    <link rel="stylesheet" href="../Styles/styles.css">
+    <link rel="stylesheet" href="../Styles/responsive.css">
+    <link rel="stylesheet" href="../students/styles/styles.css">
+    <link rel="icon" href="/logo.png" type="image/png">
+</head>
+
+<body>
+    <header>
+        <div class="header-container">
+            <a href="/"><img src="/logo.png" alt="логотип" class="logo"></a>
+            <div class="burger" id="burger">☰</div>
+        </div>
+        <nav class="navbar" id="navbar">
+            <a href="/students">Ученики</a>
+            <a href="/trainers">Тренеры</a>
+            <a href="/schedule">Расписание</a>
+            <a href="/tournaments">Турниры</a>
+            <a href="/online-game">Онлайн-игра</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Наши тренеры</h1>
+            <p>Профессиональные наставники с богатым опытом и знаниями.</p>
+        </section>
+
+        <section class="students-list">
+            <div class="student-card">
+                <img src="/images/trainer1.png" alt="Тренер 1">
+                <h3>Гроссмейстер Гросс Гроссович</h3>
+                <p>20 лет опыта, воспитатель чемпионов Казахстана.</p>
+            </div>
+            <div class="student-card">
+                <img src="/images/trainer2.png" alt="Тренер 2">
+                <h3>Стратегия Сильная Позиция</h3>
+                <p>Эксперт по обучению детей и подростков.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-column">
+            <h3>О НАС</h3>
+            <p>Шахматная Академия – место, где рождаются чемпионы!</p>
+            <div class="footer-social">
+                <a href="https://api.whatsapp.com/send/?phone=77711988820"><img src="/icons/whatsapp.png"
+                        alt="WhatsApp"></a>
+                <a href="https://www.instagram.com/chess.akadem/"><img src="/icons/instagram.png" class="instagram"
+                        alt="Instagram"></a>
+                <a href="https://t.me/chessacadempvl"><img src="/icons/telegram.png" alt="Telegram"></a>
+            </div>
+        </div>
+        <div class="footer-column">
+            <h3>АКАДЕМИЯ</h3>
+            <a href="#">Новости</a>
+            <a href="#">Методика обучения</a>
+            <a href="#">История шахмат</a>
+        </div>
+        <div class="footer-column">
+            <h3>ПОДДЕРЖКА</h3>
+            <a href="#">Связаться с нами</a>
+            <a href="#">FAQ</a>
+            <a href="#">Техническая помощь</a>
+        </div>
+        <div class="footer-column">
+            <h3>КОНТАКТЫ</h3>
+            <p>Email: info@chessacademy.com</p>
+            <p>Телефон: +7 771 198 8820</p>
+        </div>
+    </footer>
+
+    <script>
+        const burger = document.getElementById('burger');
+        const navbar = document.getElementById('navbar');
+        burger.addEventListener('click', () => {
+            navbar.classList.toggle('active');
+        });
+    </script>
+</body>
+
+</html>
