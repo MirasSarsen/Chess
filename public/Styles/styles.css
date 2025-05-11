@@ -105,13 +105,19 @@ main {
     text-align: center;
 }
 
+.feature-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
 .feature {
     flex: 1;
     padding: 20px;
     background: #fff;
     border-radius: var(--border-radius);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin: 0 10px;
+    margin: 0 10px 20px 0px;
 }
 
 .feature img {
