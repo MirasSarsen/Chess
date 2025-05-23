@@ -86,70 +86,63 @@ function callbackPawnPromotion(piece, id) {
 }
 
 //динамическое передвижение фигур благодаря айдишникам
-function moveElement(piece, id) {
+function moveElement(piece, id, internalMove = false) {
     const shouldPromote = checkForPawnPromotion(piece, id);
 
-    // Запрет на поедание короля
     const targetPiece = globalState.flat().find(el => el.id === id)?.piece;
     if (targetPiece && targetPiece.piece_name.includes("king")) {
-        console.error(
-            "НЕЛЬЗЯ съесть короля! Игра должна завершиться до этого."
-        );
+        console.error("НЕЛЬЗЯ съесть короля!");
         return;
     }
 
-    // Обработка рокировки
     const isKing = piece.piece_name.includes("king");
     const isRook = piece.piece_name.includes("rook");
 
-    if (isKing || isRook) {
-        piece.move = true;
-
-        if (isKing && piece.piece_name.includes("black")) {
-            if (id === "c8" || id === "g8") {
-                let rook = keySquareMapper[id === "c8" ? "a8" : "h8"];
-                moveElement(rook.piece, id === "c8" ? "d8" : "f8");
-            }
+    // Рокировка: переместить ладью вручную и не переключать ход
+    if (isKing && piece.piece_name.includes("white")) {
+        if (id === "c1") {
+            const rook = keySquareMapper["a1"].piece;
+            moveElement(rook, "d1", true); // внутренний ход
         }
-
-        if (isKing && piece.piece_name.includes("white")) {
-            if (id === "c1" || id === "g1") {
-                let rook = keySquareMapper[id === "c1" ? "a1" : "h1"];
-                moveElement(rook.piece, id === "c1" ? "d1" : "f1");
-            }
+        if (id === "g1") {
+            const rook = keySquareMapper["h1"].piece;
+            moveElement(rook, "f1", true);
         }
     }
 
-    // 🧼 Очистка старой позиции и установка новой
-    const flatData = globalState.flat();
-    flatData.forEach(el => {
-        if (el.id == piece.current_position) {
-            delete el.piece;
+    if (isKing && piece.piece_name.includes("black")) {
+        if (id === "c8") {
+            const rook = keySquareMapper["a8"].piece;
+            moveElement(rook, "d8", true);
         }
-        if (el.id == id) {
-            if (el.piece) {
-                el.piece.current_position = null;
-            }
-            el.piece = piece;
+        if (id === "g8") {
+            const rook = keySquareMapper["h8"].piece;
+            moveElement(rook, "f8", true);
         }
-    });
+    }
 
-    clearHightlight();
+    // Обновление позиции
+    globalState.flat().forEach(el => {
+        if (el.id === piece.current_position) delete el.piece;
+        if (el.id === id) el.piece = piece;
+    });
 
     const prevSquare = document.getElementById(piece.current_position);
     const targetSquare = document.getElementById(id);
 
-    if (prevSquare) {
+    if (prevSquare && targetSquare) {
         prevSquare.classList.remove("hightlightYellow");
-
         const pieceImage = prevSquare.querySelector("img");
-        if (pieceImage && targetSquare) {
+        if (pieceImage) {
             targetSquare.innerHTML = "";
             targetSquare.appendChild(pieceImage);
         }
     }
 
     piece.current_position = id;
+    piece.move = true;
+
+    clearHightlight();
 
     if (shouldPromote) {
         pawnPromotion(inTurn, callbackPawnPromotion, id);
@@ -157,7 +150,7 @@ function moveElement(piece, id) {
 
     showCheckIfKing(piece, id, keySquareMapper);
 
-    // Проверка на шах и мат после хода
+    // Проверка шаха и мата
     const nextTurn = inTurn === "white" ? "black" : "white";
     if (isInCheck(nextTurn)) {
         console.log(`Шах ${nextTurn} королю!`);
@@ -166,7 +159,9 @@ function moveElement(piece, id) {
         }
     }
 
-    changeTurn();
+    if (!internalMove) {
+        changeTurn();
+    }
 }
 
 //правильное состояние подсветки (то есть, чтобы очищать фон с посл клика)
