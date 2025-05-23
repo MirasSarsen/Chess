@@ -5,7 +5,10 @@ import {
     clearHightlight,
     selfHighlight,
     globalPiece,
+    checkCheckmateStatus,
 } from "../Render/main.js";
+import isInCheck from "../Helper/checkmateHelper.js";
+import { isCheckmate } from "../Helper/checkmateHelper.js";
 import {
     checkPieceOfOpponentOnElement,
     checkSquareCaptureId,
@@ -31,68 +34,6 @@ let whoInCheck = null;
 
 function changeTurn() {
     inTurn = inTurn === "white" ? "black" : "white";
-}
-
-function checkForCheck() {
-    if (inTurn === "black") {
-        const whiteKingCurrentPosition =
-            globalPiece.white_king.current_position;
-        const knight_1 = globalPiece.black_knight_1.current_position;
-        const knight_2 = globalPiece.black_knight_2.current_position;
-        const king = globalPiece.black_king.current_position;
-        const bishop_1 = globalPiece.black_bishop_1.current_position;
-        const bishop_2 = globalPiece.black_bishop_2.current_position;
-        const rook_1 = globalPiece.black_rook_1.current_position;
-        const rook_2 = globalPiece.black_rook_2.current_position;
-        const queen = globalPiece.black_queen.current_position;
-
-        let finalCheckList = [];
-        finalCheckList.push(giveKnightCaptureIds(knight_1, inTurn));
-        finalCheckList.push(giveKnightCaptureIds(knight_2, inTurn));
-        finalCheckList.push(giveKingCaptureIds(king, inTurn));
-        finalCheckList.push(giveBishopCaptureIds(bishop_1, inTurn));
-        finalCheckList.push(giveBishopCaptureIds(bishop_2, inTurn));
-        finalCheckList.push(giveRookCaptureIds(rook_1, inTurn));
-        finalCheckList.push(giveRookCaptureIds(rook_2, inTurn));
-        finalCheckList.push(giveQueenCaptureIds(queen, inTurn));
-
-        finalCheckList = finalCheckList.flat();
-        const checkOrNot = finalCheckList.find(
-            element => element === whiteKingCurrentPosition
-        );
-        if (checkOrNot) {
-            whoInCheck = "white";
-        }
-    } else {
-        const blackKingCurrentPosition =
-            globalPiece.black_king.current_position;
-        const knight_1 = globalPiece.white_knight_1.current_position;
-        const knight_2 = globalPiece.white_knight_2.current_position;
-        const king = globalPiece.white_king.current_position;
-        const bishop_1 = globalPiece.white_bishop_1.current_position;
-        const bishop_2 = globalPiece.white_bishop_2.current_position;
-        const rook_1 = globalPiece.white_rook_1.current_position;
-        const rook_2 = globalPiece.white_rook_2.current_position;
-        const queen = globalPiece.white_queen.current_position;
-
-        let finalCheckList = [];
-        finalCheckList.push(giveKnightCaptureIds(knight_1, inTurn));
-        finalCheckList.push(giveKnightCaptureIds(knight_2, inTurn));
-        finalCheckList.push(giveKingCaptureIds(king, inTurn));
-        finalCheckList.push(giveBishopCaptureIds(bishop_1, inTurn));
-        finalCheckList.push(giveBishopCaptureIds(bishop_2, inTurn));
-        finalCheckList.push(giveRookCaptureIds(rook_1, inTurn));
-        finalCheckList.push(giveRookCaptureIds(rook_2, inTurn));
-        finalCheckList.push(giveQueenCaptureIds(queen, inTurn));
-
-        finalCheckList = finalCheckList.flat();
-        const checkOrNot = finalCheckList.find(
-            element => element === blackKingCurrentPosition
-        );
-        if (checkOrNot) {
-            whoInCheck = "black";
-        }
-    }
 }
 
 function captureInTurn(square) {
@@ -148,33 +89,30 @@ function callbackPawnPromotion(piece, id) {
 function moveElement(piece, id) {
     const shouldPromote = checkForPawnPromotion(piece, id);
 
-    if (
-        piece.piece_name.includes("king") ||
-        piece.piece_name.includes("rook")
-    ) {
+    // Запрет на поедание короля
+    const targetPiece = globalState.flat().find(el => el.id === id)?.piece;
+    if (targetPiece && targetPiece.piece_name.includes("king")) {
+        console.error(
+            "НЕЛЬЗЯ съесть короля! Игра должна завершиться до этого."
+        );
+        return;
+    }
+
+    // Обработка рокировки
+    const isKing = piece.piece_name.includes("king");
+    const isRook = piece.piece_name.includes("rook");
+
+    if (isKing || isRook) {
         piece.move = true;
 
-        if (
-            piece.piece_name.includes("king") &&
-            piece.piece_name.includes("black")
-        ) {
+        if (isKing && piece.piece_name.includes("black")) {
             if (id === "c8" || id === "g8") {
                 let rook = keySquareMapper[id === "c8" ? "a8" : "h8"];
                 moveElement(rook.piece, id === "c8" ? "d8" : "f8");
             }
         }
-    }
 
-    if (
-        piece.piece_name.includes("king") ||
-        piece.piece_name.includes("rook")
-    ) {
-        piece.move = true;
-
-        if (
-            piece.piece_name.includes("king") &&
-            piece.piece_name.includes("white")
-        ) {
+        if (isKing && piece.piece_name.includes("white")) {
             if (id === "c1" || id === "g1") {
                 let rook = keySquareMapper[id === "c1" ? "a1" : "h1"];
                 moveElement(rook.piece, id === "c1" ? "d1" : "f1");
@@ -182,8 +120,8 @@ function moveElement(piece, id) {
         }
     }
 
+    // 🧼 Очистка старой позиции и установка новой
     const flatData = globalState.flat();
-
     flatData.forEach(el => {
         if (el.id == piece.current_position) {
             delete el.piece;
@@ -198,27 +136,17 @@ function moveElement(piece, id) {
 
     clearHightlight();
 
-    // Получаем элемент предыдущей позиции
-    const previousPiece = document.getElementById(piece.current_position);
-    if (previousPiece) {
-        previousPiece.classList.remove("hightlightYellow");
+    const prevSquare = document.getElementById(piece.current_position);
+    const targetSquare = document.getElementById(id);
 
-        // Получаем изображение фигуры
-        const pieceImage = previousPiece.querySelector("img");
-        if (pieceImage) {
-            // Получаем элемент текущей позиции
-            const currentPiece = document.getElementById(id);
-            if (currentPiece) {
-                currentPiece.innerHTML = ""; // Очищаем поле перед вставкой
-                currentPiece.appendChild(pieceImage);
-            } else {
-                console.error(`Элемент с id="${id}" не найден.`);
-            }
-        } else {
-            console.error("Фигура в previousPiece не найдена.");
+    if (prevSquare) {
+        prevSquare.classList.remove("hightlightYellow");
+
+        const pieceImage = prevSquare.querySelector("img");
+        if (pieceImage && targetSquare) {
+            targetSquare.innerHTML = "";
+            targetSquare.appendChild(pieceImage);
         }
-    } else {
-        console.error(`Элемент с id="${piece.current_position}" не найден.`);
     }
 
     piece.current_position = id;
@@ -227,7 +155,15 @@ function moveElement(piece, id) {
         pawnPromotion(inTurn, callbackPawnPromotion, id);
     }
 
-    checkForCheck();
+    // Проверка на шах и мат после хода
+    const nextTurn = inTurn === "white" ? "black" : "white";
+    if (isInCheck(nextTurn)) {
+        console.log(`Шах ${nextTurn} королю!`);
+        if (isCheckmate(nextTurn)) {
+            console.log(`Мат! Победил ${inTurn}.`);
+        }
+    }
+
     changeTurn();
 }
 

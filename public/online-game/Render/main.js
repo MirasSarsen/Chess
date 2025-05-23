@@ -1,8 +1,34 @@
 import * as piece from "../Data/pieces.js";
 import { ROOT_DIV } from "../Helper/constants.js";
 import { globalState } from "../index.js";
+import isInCheck, { isCheckmate } from "../Helper/checkmateHelper.js";
 
 const globalPiece = new Object();
+
+function checkCheckmateStatus(currentTurn) {
+    const opponentTurn = currentTurn === "white" ? "black" : "white";
+
+    const attackedKing = globalPiece[`${opponentTurn}_king`];
+    if (!attackedKing || !attackedKing.current_position) {
+        console.warn(
+            `${opponentTurn} король отсутствует. Проверка шаха невозможна.`
+        );
+        return;
+    }
+
+    if (isInCheck(opponentTurn)) {
+        document
+            .getElementById(attackedKing.current_position)
+            .classList.add("checkHighlight");
+
+        console.log(`Шах ${opponentTurn}!`);
+
+        if (isCheckmate(opponentTurn)) {
+            console.log(`Мат ${opponentTurn}! Игра окончена.`);
+            alert(`Мат ${opponentTurn}!`);
+        }
+    }
+}
 
 //функция для рендера фигур из globalStateData (используется для обновления globalState)
 function globalStateRender() {
@@ -192,4 +218,5 @@ export {
     selfHighlight,
     globalStateRender,
     globalPiece,
+    checkCheckmateStatus,
 };
