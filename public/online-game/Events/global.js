@@ -7,8 +7,8 @@ import {
     globalPiece,
     checkCheckmateStatus,
 } from "../Render/main.js";
-import isInCheck from "../Helper/checkmateHelper.js";
-import { isCheckmate } from "../Helper/checkmateHelper.js";
+import { isInCheck } from "../Helper/checkmateHelper.js";
+import { isCheckmate, showCheckIfKing } from "../Helper/checkmateHelper.js";
 import {
     checkPieceOfOpponentOnElement,
     checkSquareCaptureId,
@@ -155,6 +155,8 @@ function moveElement(piece, id) {
         pawnPromotion(inTurn, callbackPawnPromotion, id);
     }
 
+    showCheckIfKing(piece, id, keySquareMapper);
+
     // Проверка на шах и мат после хода
     const nextTurn = inTurn === "white" ? "black" : "white";
     if (isInCheck(nextTurn)) {
@@ -198,7 +200,7 @@ function whitePawnClick(square) {
 
     if (square.captureHighlight) {
         // пешка хавает других
-        moveElement(selfHighlightState, piece.current_position);
+        moveElement(selfHighlightState, square.id);
         clearPreviousSelfHighlight(selfHighlightState);
         clearHighlightLocal();
         return;
@@ -244,7 +246,9 @@ function whitePawnClick(square) {
         }`;
 
         let captureIds = [col1, col2];
-        // captureIds = checkSquareCaptureId(captureIds);
+        captureIds.forEach(id => {
+            checkPieceOfOpponentOnElement(id, "white");
+        });
 
         //с той же позиции
         const hightlightSquareIds = [
@@ -1204,7 +1208,7 @@ function blackPawnClick(square) {
 
     if (square.captureHighlight) {
         // пешка хавает других
-        moveElement(selfHighlightState, piece.current_position);
+        moveElement(selfHighlightState, square.id);
         clearPreviousSelfHighlight(selfHighlightState);
         clearHighlightLocal();
         return;

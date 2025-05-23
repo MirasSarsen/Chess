@@ -1,7 +1,7 @@
 import * as piece from "../Data/pieces.js";
 import { ROOT_DIV } from "../Helper/constants.js";
 import { globalState } from "../index.js";
-import isInCheck, { isCheckmate } from "../Helper/checkmateHelper.js";
+import { isInCheck, isCheckmate } from "../Helper/checkmateHelper.js";
 
 const globalPiece = new Object();
 

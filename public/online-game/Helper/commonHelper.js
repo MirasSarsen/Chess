@@ -545,6 +545,36 @@ function giveKnightCaptureIds(id, color) {
     return returnArr;
 }
 
+function getAttackedSquares(color) {
+    const attacked = [];
+
+    for (const id in keySquareMapper) {
+        const pieceObj = keySquareMapper[id].piece;
+        if (!pieceObj || !pieceObj.piece_name.startsWith(color)) continue;
+
+        const pieceType = pieceObj.piece_name.split("-")[1];
+
+        let moves = [];
+        if (pieceType === "pawn") {
+            moves = givePawnCaptureIds(id, color); // ты должен реализовать эту функцию
+        } else if (pieceType === "knight") {
+            moves = giveKnightHighlightIds(id);
+        } else if (pieceType === "bishop") {
+            moves = giveBishopCaptureIds(id);
+        } else if (pieceType === "rook") {
+            moves = giveRookCaptureIds(id);
+        } else if (pieceType === "queen") {
+            moves = giveQueenCaptureIds(id);
+        } else if (pieceType === "king") {
+            moves = giveKingHighlightIds(id)[color] || [];
+        }
+
+        attacked.push(...moves);
+    }
+
+    return [...new Set(attacked)]; // убрать дубликаты
+}
+
 export {
     checkPieceOfOpponentOnElement,
     checkSquareCaptureId,
@@ -559,4 +589,5 @@ export {
     giveRookCaptureIds,
     giveBishopCaptureIds,
     giveQueenCaptureIds,
+    getAttackedSquares,
 };

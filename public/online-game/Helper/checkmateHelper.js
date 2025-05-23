@@ -7,29 +7,30 @@ import {
     giveQueenCaptureIds,
     checkWeatherPieceExistsOrNot,
 } from "./commonHelper.js";
+import { keySquareMapper } from "../index.js";
 
-function isInCheck(inTurn) {
-    const isBlack = inTurn === "black";
-    const opponentKingPos = isBlack
-        ? globalPiece.white_king?.current_position
-        : globalPiece.black_king?.current_position;
+function isInCheck(currentTurn) {
+    const isBlack = currentTurn === "black";
+    const ownKingPos = isBlack
+        ? globalPiece.black_king?.current_position
+        : globalPiece.white_king?.current_position;
 
-    if (!opponentKingPos) {
-        console.warn("Король противника не найден на доске.");
+    if (!ownKingPos) {
+        console.warn("Собственный король не найден на доске.");
         return false;
     }
 
-    const prefix = isBlack ? "black" : "white";
+    const enemyPrefix = isBlack ? "white" : "black";
 
     const attackers = [
-        globalPiece[`${prefix}_knight_1`],
-        globalPiece[`${prefix}_knight_2`],
-        globalPiece[`${prefix}_king`],
-        globalPiece[`${prefix}_bishop_1`],
-        globalPiece[`${prefix}_bishop_2`],
-        globalPiece[`${prefix}_rook_1`],
-        globalPiece[`${prefix}_rook_2`],
-        globalPiece[`${prefix}_queen`],
+        globalPiece[`${enemyPrefix}_knight_1`],
+        globalPiece[`${enemyPrefix}_knight_2`],
+        globalPiece[`${enemyPrefix}_king`],
+        globalPiece[`${enemyPrefix}_bishop_1`],
+        globalPiece[`${enemyPrefix}_bishop_2`],
+        globalPiece[`${enemyPrefix}_rook_1`],
+        globalPiece[`${enemyPrefix}_rook_2`],
+        globalPiece[`${enemyPrefix}_queen`],
     ];
 
     const moveFuncs = {
@@ -40,15 +41,15 @@ function isInCheck(inTurn) {
         queen: giveQueenCaptureIds,
     };
 
-    let attackSquares = attackers.flatMap(piece => {
+    const attackSquares = attackers.flatMap(piece => {
         if (!piece || !piece.current_position) return [];
         const type =
             piece.type ||
             (typeof piece.name === "string" ? piece.name.split("_")[1] : null);
-        return moveFuncs[type]?.(piece.current_position, inTurn) || [];
+        return moveFuncs[type]?.(piece.current_position, enemyPrefix) || [];
     });
 
-    return attackSquares.includes(opponentKingPos);
+    return attackSquares.includes(ownKingPos);
 }
 
 function getAllPiecesOfColor(color) {
@@ -161,4 +162,61 @@ export function isCheckmate(currentTurn) {
     return true;
 }
 
-export default isInCheck;
+function showCheckIfKing(piece, pieceId, keySquareMapper) {
+    const color = piece.color;
+    const name = piece.piece_name;
+
+    let attackSquares = [];
+
+    if (name.includes("queen")) {
+        attackSquares = giveQueenCaptureIds(pieceId, color);
+    } else if (name.includes("rook")) {
+        attackSquares = giveRookCaptureIds(pieceId, color);
+    } else if (name.includes("bishop")) {
+        attackSquares = giveBishopCaptureIds(pieceId, color);
+    } else if (name.includes("knight")) {
+        attackSquares = giveKnightCaptureIds(pieceId, color);
+    } else if (name.includes("king")) {
+        attackSquares = giveKingCaptureIds(pieceId, color);
+    }
+
+    const kingId = Object.keys(keySquareMapper).find(id => {
+        const el = keySquareMapper[id];
+        return (
+            el.piece &&
+            el.piece.piece_name ===
+                `${color === "white" ? "black" : "white"}-king`
+        );
+    });
+
+    if (kingId && attackSquares.includes(kingId)) {
+        showCheckAlert(); // Показать "Шах!"
+    }
+}
+
+function showCheckAlert() {
+    const alert = document.createElement("div");
+    alert.innerText = "Шах!";
+    alert.className = "check-alert";
+
+    // Пример стилей
+    Object.assign(alert.style, {
+        position: "absolute",
+        top: "10px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        backgroundColor: "#ff4444",
+        color: "white",
+        padding: "10px 20px",
+        borderRadius: "8px",
+        fontSize: "18px",
+        zIndex: "9999",
+        boxShadow: "0 0 10px rgba(0,0,0,0.5)",
+    });
+
+    document.body.appendChild(alert);
+
+    setTimeout(() => alert.remove(), 2000); // исчезает через 2 секунды
+}
+
+export { isInCheck, showCheckAlert, showCheckIfKing };
