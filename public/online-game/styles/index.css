@@ -8,6 +8,7 @@ body {
     display: flex;
     flex-direction: column;
     width: fit-content;
+    margin-top: 10%;
 }
 
 .squareRow {
@@ -126,4 +127,46 @@ body {
     padding: 4px 8px;
     background-color: #2106a9;
     color: white;
+}
+
+header {
+    background: var(--header);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 10px 5%;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar a {
+    font-size: 1.1rem;
+    margin-left: 2rem;
+    transition: 0.3s;
+    text-decoration: none;
+    color: #E8EDF9;
+}
+
+.navbar a:hover {
+    color: #00ff0d;
+}
+
+.logo {
+    width: 100px;
+    height: auto;
+}
+
+.burger {
+    display: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #E8EDF9;
+    font-size: 2rem;
+    user-select: none;
+    padding: 10px;
+    margin-left: auto;
 }

@@ -23,6 +23,7 @@ import {
     giveBishopCaptureIds,
     giveRookCaptureIds,
     giveQueenCaptureIds,
+    getAttackedSquares,
 } from "../Helper/commonHelper.js";
 // import logMoves from "../Helper/logging.js";
 import pawnPromotion from "../Helper/modalCreator.js";
@@ -87,6 +88,37 @@ function callbackPawnPromotion(piece, id) {
 
 //динамическое передвижение фигур благодаря айдишникам
 function moveElement(piece, id, internalMove = false) {
+    if (!internalMove) {
+        const clonedState = JSON.parse(JSON.stringify(globalState));
+        const fromId = piece.current_position;
+        const toId = id;
+
+        // Имитация хода
+        const from = clonedState.flat().find(el => el.id === fromId);
+        const to = clonedState.flat().find(el => el.id === toId);
+        to.piece = from.piece;
+        from.piece = null;
+
+        const ourColor = piece.piece_name.includes("white") ? "white" : "black";
+
+        // Найти своего короля
+        const kingSquare = clonedState
+            .flat()
+            .find(square => square.piece?.piece_name === `${ourColor}_king`);
+
+        if (!kingSquare) {
+            console.error("Не найден король для цвета:", ourColor);
+        } else {
+            const opponentColor = ourColor === "white" ? "black" : "white";
+            const attacked = getAttackedSquares(opponentColor, clonedState);
+
+            if (attacked.includes(kingSquare.id)) {
+                console.log("Ход невозможен: король будет под шахом");
+                return;
+            }
+        }
+    }
+
     const shouldPromote = checkForPawnPromotion(piece, id);
 
     const targetPiece = globalState.flat().find(el => el.id === id)?.piece;

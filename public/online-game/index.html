@@ -6,10 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Одиночная игра</title>
     <link rel="stylesheet" href="styles/index.css">
-    <link rel="stylesheet" href="../Styles/responsive.css">
+    <link rel="icon" href="/logo.png" type="image/png">
 </head>
 
 <body class="d-flex">
+    <header>
+        <div class="header-container">
+            <a href="/"><img src="/logo.png" alt="логотип" class="logo"></a>
+            <div class="burger" id="burger">☰</div>
+        </div>
+        <nav class="navbar" id="navbar">
+            <a href="/students">Ученики</a>
+            <a href="/trainers">Тренеры</a>
+            <a href="/schedule">Расписание</a>
+            <a href="/tournaments">Турниры</a>
+            <a href="/online-game">Одиночная-игра</a>
+        </nav>
+    </header>
     <div id="root"></div>
     <div id="move_logger">
         <ol></ol>

@@ -536,43 +536,85 @@ function giveKnightCaptureIds(id, color) {
 
     let returnArr = giveKnightHighlightIds(id);
 
-    returnArr = returnArr.filter(element => {
-        if (checkPieceOfOpponentOnElementNoDom(element, color)) {
-            return true;
-        }
-    });
+    returnArr = returnArr.filter(element =>
+        checkPieceOfOpponentOnElementNoDom(element, color)
+    );
 
     return returnArr;
 }
 
-function getAttackedSquares(color) {
-    const attacked = [];
+//функция для шаха с пешками
+function givePawnCaptureIds(id, color) {
+    if (!id) return [];
 
-    for (const id in keySquareMapper) {
-        const pieceObj = keySquareMapper[id].piece;
-        if (!pieceObj || !pieceObj.piece_name.startsWith(color)) continue;
+    const alpha = id[0];
+    const num = parseInt(id[1]);
 
-        const pieceType = pieceObj.piece_name.split("-")[1];
+    const captures = [];
 
-        let moves = [];
-        if (pieceType === "pawn") {
-            moves = givePawnCaptureIds(id, color); // ты должен реализовать эту функцию
-        } else if (pieceType === "knight") {
-            moves = giveKnightHighlightIds(id);
-        } else if (pieceType === "bishop") {
-            moves = giveBishopCaptureIds(id);
-        } else if (pieceType === "rook") {
-            moves = giveRookCaptureIds(id);
-        } else if (pieceType === "queen") {
-            moves = giveQueenCaptureIds(id);
-        } else if (pieceType === "king") {
-            moves = giveKingHighlightIds(id)[color] || [];
+    const direction = color === "white" ? 1 : -1;
+    const nextRank = num + direction;
+
+    if (nextRank < 1 || nextRank > 8) return [];
+
+    const leftFile = String.fromCharCode(alpha.charCodeAt(0) - 1);
+    const rightFile = String.fromCharCode(alpha.charCodeAt(0) + 1);
+
+    if (leftFile >= "a" && leftFile <= "h") {
+        const leftCapture = `${leftFile}${nextRank}`;
+        if (checkPieceOfOpponentOnElementNoDom(leftCapture, color)) {
+            captures.push(leftCapture);
         }
-
-        attacked.push(...moves);
     }
 
-    return [...new Set(attacked)]; // убрать дубликаты
+    if (rightFile >= "a" && rightFile <= "h") {
+        const rightCapture = `${rightFile}${nextRank}`;
+        if (checkPieceOfOpponentOnElementNoDom(rightCapture, color)) {
+            captures.push(rightCapture);
+        }
+    }
+
+    return captures;
+}
+
+//реализация шаха
+function getAttackedSquares(color) {
+    const opponentColor = color === "white" ? "black" : "white";
+    const attacked = [];
+
+    const allPieces = globalState
+        .flat()
+        .filter(square => square.piece && square.piece.color === opponentColor);
+
+    allPieces.forEach(square => {
+        const { piece } = square;
+        let captureIds = [];
+
+        switch (piece.piece_name.toLowerCase()) {
+            case "bishop":
+                captureIds = giveBishopCaptureIds(square.id, opponentColor);
+                break;
+            case "rook":
+                captureIds = giveRookCaptureIds(square.id, opponentColor);
+                break;
+            case "queen":
+                captureIds = giveQueenCaptureIds(square.id, opponentColor);
+                break;
+            case "king":
+                captureIds = giveKingCaptureIds(square.id, opponentColor);
+                break;
+            case "knight":
+                captureIds = giveKnightCaptureIds(square.id, opponentColor);
+                break;
+            case "pawn":
+                captureIds = givePawnCaptureIds(square.id, opponentColor); // <-- ВОТ ЗДЕСЬ
+                break;
+        }
+
+        attacked.push(...captureIds);
+    });
+
+    return attacked;
 }
 
 export {
@@ -590,4 +632,5 @@ export {
     giveBishopCaptureIds,
     giveQueenCaptureIds,
     getAttackedSquares,
+    givePawnCaptureIds,
 };
