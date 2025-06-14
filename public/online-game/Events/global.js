@@ -100,8 +100,8 @@ function moveElement(piece, id, internalMove = false) {
         from.piece = null;
 
         const ourColor = piece.piece_name.includes("white") ? "white" : "black";
+        const opponentColor = ourColor === "white" ? "black" : "white";
 
-        // Найти своего короля
         const kingSquare = clonedState
             .flat()
             .find(square => square.piece?.piece_name === `${ourColor}_king`);
@@ -109,14 +109,24 @@ function moveElement(piece, id, internalMove = false) {
         if (!kingSquare) {
             console.error("Не найден король для цвета:", ourColor);
         } else {
-            const opponentColor = ourColor === "white" ? "black" : "white";
             const attacked = getAttackedSquares(opponentColor, clonedState);
-
             if (attacked.includes(kingSquare.id)) {
-                console.log("Ход невозможен: король будет под шахом");
+                console.warn(
+                    `Нельзя сходить: ${ourColor} король окажется под шахом`
+                );
                 return;
             }
         }
+    }
+
+    // после showCheckIfKing(piece, id, keySquareMapper);
+    const opponent = inTurn; // ещё до изменения inTurn
+    const nextPlayer = opponent === "white" ? "black" : "white";
+    if (isInCheck(nextPlayer)) {
+        // подсветить шах
+        const kingSquareId = globalPiece[`${nextPlayer}_king`].current_position;
+        document.getElementById(kingSquareId).classList.add("checkHighlight");
+        showCheckAlert(); // опционально, чтобы ещё и алерт выскочил
     }
 
     const shouldPromote = checkForPawnPromotion(piece, id);
@@ -130,11 +140,11 @@ function moveElement(piece, id, internalMove = false) {
     const isKing = piece.piece_name.includes("king");
     const isRook = piece.piece_name.includes("rook");
 
-    // Рокировка: переместить ладью вручную и не переключать ход
+    // Рокировка
     if (isKing && piece.piece_name.includes("white")) {
         if (id === "c1") {
             const rook = keySquareMapper["a1"].piece;
-            moveElement(rook, "d1", true); // внутренний ход
+            moveElement(rook, "d1", true);
         }
         if (id === "g1") {
             const rook = keySquareMapper["h1"].piece;
@@ -182,7 +192,7 @@ function moveElement(piece, id, internalMove = false) {
 
     showCheckIfKing(piece, id, keySquareMapper);
 
-    // Проверка шаха и мата
+    // Проверка шаха и мата после хода
     const nextTurn = inTurn === "white" ? "black" : "white";
     if (isInCheck(nextTurn)) {
         console.log(`Шах ${nextTurn} королю!`);
@@ -194,6 +204,179 @@ function moveElement(piece, id, internalMove = false) {
     if (!internalMove) {
         changeTurn();
     }
+}
+
+function filterLegalMoves(piece, moveList, globalState, getAttackedSquares) {
+    const color = piece.piece_name.includes("white") ? "white" : "black";
+    const opponent = color === "white" ? "black" : "white";
+
+    const fromId = piece.current_position;
+
+    const legal = [];
+
+    for (const targetId of moveList) {
+        // глубокая копия состояния доски
+        const clone = JSON.parse(JSON.stringify(globalState));
+        // найти в clone объекты клеток from и to
+        const flat = clone.flat();
+        const fromClone = flat.find(sq => sq.id === fromId);
+        const toClone = flat.find(sq => sq.id === targetId);
+
+        if (!fromClone) continue;
+        // симуляция хода: переместить ссылку на piece
+        // Примечание: в clone мы храним только данные о piece в globalState.
+        toClone.piece = fromClone.piece;
+        fromClone.piece = null;
+
+        // найти в clone позицию короля этого цвета
+        const kingSq = flat.find(
+            sq => sq.piece?.piece_name === `${color}_king`
+        );
+        if (!kingSq) {
+            // без короля – некорректно, но пропускаем
+            continue;
+        }
+        // получить атакованные клетки противника на clone
+        const attacked = getAttackedSquares(opponent, clone);
+        // если после хода король не под атакой, ход легален
+        if (!attacked.includes(kingSq.id)) {
+            legal.push(targetId);
+        }
+    }
+    return legal;
+}
+
+function handleWhitePieceClick(square, getRawMovesCallback) {
+    const piece = square.piece;
+    if (!piece) return;
+
+    // Повторный клик на уже подсвеченной фигуре — снять подсветку
+    if (piece === selfHighlightState) {
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    // Ход/поедание
+    if (square.captureHighlight) {
+        moveElement(selfHighlightState, piece.current_position);
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    // Очистка доски
+    clearPreviousSelfHighlight(selfHighlightState);
+    clearHighlightLocal();
+
+    // Подсветка выбранной фигуры
+    selfHighlight(piece);
+    hightlight_state = true;
+    selfHighlightState = piece;
+    moveState = piece;
+
+    const rawMoves = getRawMovesCallback(piece.current_position);
+
+    // 🛑 Если под шахом, фильтруем возможные ходы
+    const currentColor = "white";
+    const legalMoves = isInCheck(currentColor)
+        ? filterLegalMoves(piece, rawMoves, globalState, getAttackedSquares)
+        : rawMoves;
+
+    legalMoves.forEach(id => {
+        const square = keySquareMapper[id];
+        if (!square) return;
+
+        const targetPiece = square.piece;
+        if (targetPiece && targetPiece.color !== currentColor) {
+            square.captureHighlight = true;
+        } else {
+            square.highlight = true;
+        }
+    });
+
+    globalStateRender();
+}
+
+function handleBlackPieceClick(square, getRawMovesCallback) {
+    const piece = square.piece;
+    if (!piece) return;
+
+    // Повторный клик на уже подсвеченной фигуре — снять подсветку
+    if (piece === selfHighlightState) {
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    // Ход/поедание
+    if (square.captureHighlight) {
+        moveElement(selfHighlightState, piece.current_position);
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return;
+    }
+
+    // Очистка доски
+    clearPreviousSelfHighlight(selfHighlightState);
+    clearHighlightLocal();
+
+    // Подсветка выбранной фигуры
+    selfHighlight(piece);
+    hightlight_state = true;
+    selfHighlightState = piece;
+    moveState = piece;
+
+    const rawMoves = getRawMovesCallback(piece.current_position);
+
+    // 🛑 Если под шахом, фильтруем возможные ходы
+    const currentColor = "black";
+    const legalMoves = isInCheck(currentColor)
+        ? filterLegalMoves(piece, rawMoves, globalState, getAttackedSquares)
+        : rawMoves;
+
+    // Подсветка допустимых ходов
+    legalMoves.forEach(id => {
+        const square = keySquareMapper[id];
+        if (square) square.highlight = true;
+    });
+
+    // Подсветка возможных взятий
+    legalMoves.forEach(id => {
+        const square = keySquareMapper[id];
+        if (!square) return;
+
+        const targetPiece = square.piece;
+        if (targetPiece && targetPiece.color !== currentColor) {
+            square.captureHighlight = true;
+        } else {
+            square.highlight = true;
+        }
+    });
+
+    globalStateRender();
+}
+
+function handleSelfOrCaptureClick(square, piece) {
+    if (piece === selfHighlightState) {
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return true;
+    }
+    if (square.captureHighlight) {
+        moveElement(selfHighlightState, square.id || piece.current_position);
+        clearPreviousSelfHighlight(selfHighlightState);
+        clearHighlightLocal();
+        return true;
+    }
+    return false;
+}
+
+function highlightSquares(ids) {
+    ids.forEach(id => {
+        const element = keySquareMapper[id];
+        if (element) element.highlight = true;
+    });
 }
 
 //правильное состояние подсветки (то есть, чтобы очищать фон с посл клика)
@@ -213,6 +396,50 @@ function movePieceFromXToY(from, to) {
     to.piece = from.piece;
     from.piece = null;
     globalStateRender();
+}
+function trimLineOnFirstPiece(arr, color) {
+    const result = [];
+
+    for (const id of arr) {
+        const square = keySquareMapper[id];
+        if (!square) break;
+
+        if (!square.piece) {
+            result.push(id);
+        } else {
+            if (square.piece.color === color) break; // своя фигура — стоп
+            result.push(id); // вражескую — можно съесть
+            break;
+        }
+    }
+
+    return result;
+}
+
+function bishopMovesWrapper(pos, color) {
+    const dirs = giveBishopHighlightIds(pos); // возвращает { topLeft, topRight, ... }
+
+    return [
+        ...trimLineOnFirstPiece(dirs.topLeft, color),
+        ...trimLineOnFirstPiece(dirs.topRight, color),
+        ...trimLineOnFirstPiece(dirs.bottomLeft, color),
+        ...trimLineOnFirstPiece(dirs.bottomRight, color),
+    ];
+}
+
+function rookMovesWrapper(pos, color) {
+    const dirs = giveRookHighlightIds(pos); // возвращает { top, bottom, left, right }
+
+    return [
+        ...trimLineOnFirstPiece(dirs.top, color),
+        ...trimLineOnFirstPiece(dirs.bottom, color),
+        ...trimLineOnFirstPiece(dirs.left, color),
+        ...trimLineOnFirstPiece(dirs.right, color),
+    ];
+}
+
+function queenMovesWrapper(pos, color) {
+    return [...bishopMovesWrapper(pos, color), ...rookMovesWrapper(pos, color)];
 }
 
 //логика белых пешек
@@ -297,336 +524,22 @@ function whitePawnClick(square) {
 
 //логика белого слона
 function whiteBishopClick(square) {
-    const piece = square.piece;
-
-    if (piece == selfHighlightState) {
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    if (square.captureHighlight) {
-        // слон хавает других
-        moveElement(selfHighlightState, piece.current_position);
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    //очистить всю доску от подсветок
-    clearPreviousSelfHighlight(selfHighlightState);
-    clearHighlightLocal();
-
-    //подсветка фигуры при клике
-    selfHighlight(piece);
-    hightlight_state = true;
-    selfHighlightState = piece;
-
-    //фигура для динамического движения
-    moveState = piece;
-
-    const current_pos = piece.current_position;
-    const flatArray = globalState.flat();
-
-    let hightlightSquareIds = giveBishopHighlightIds(current_pos);
-    let temp = [];
-
-    const { bottomLeft, topLeft, bottomRight, topRight } = hightlightSquareIds;
-
-    let result = [];
-    result.push(checkSquareCaptureId(bottomLeft));
-    result.push(checkSquareCaptureId(topLeft));
-    result.push(checkSquareCaptureId(bottomRight));
-    result.push(checkSquareCaptureId(topRight));
-
-    //для темп
-    temp.push(bottomLeft);
-    temp.push(topLeft);
-    temp.push(bottomRight);
-    temp.push(topRight);
-
-    // hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
-    hightlightSquareIds = result.flat();
-
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
-    });
-
-    let captureIds = [];
-
-    for (let index = 0; index < temp.length; index++) {
-        const arr = temp[index];
-
-        for (let j = 0; j < arr.length; j++) {
-            const element = arr[j];
-
-            let checkPieceResult = checkWeatherPieceExistsOrNot(element);
-            if (
-                checkPieceResult &&
-                checkPieceResult.piece &&
-                checkPieceResult.piece.piece_name
-                    .toLowerCase()
-                    .includes("white")
-            ) {
-                break;
-            }
-
-            if (checkPieceOfOpponentOnElement(element, "white")) {
-                break;
-            }
-        }
-    }
-
-    globalStateRender();
+    handleWhitePieceClick(square, pos => bishopMovesWrapper(pos, "white"));
 }
 
 //логика белой ладьи
 function whiteRookClick(square) {
-    const piece = square.piece;
-
-    if (piece == selfHighlightState) {
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    if (square.captureHighlight) {
-        // ладья хавает других
-        moveElement(selfHighlightState, piece.current_position);
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    //очистить всю доску от подсветок
-    clearPreviousSelfHighlight(selfHighlightState);
-    clearHighlightLocal();
-
-    //подсветка фигуры при клике
-    selfHighlight(piece);
-    hightlight_state = true;
-    selfHighlightState = piece;
-
-    //фигура для динамического движения
-    moveState = piece;
-
-    const current_pos = piece.current_position;
-    const flatArray = globalState.flat();
-
-    let hightlightSquareIds = giveRookHighlightIds(current_pos);
-    let temp = [];
-
-    const { top, bottom, left, right } = hightlightSquareIds;
-
-    let result = [];
-    result.push(checkSquareCaptureId(top));
-    result.push(checkSquareCaptureId(bottom));
-    result.push(checkSquareCaptureId(left));
-    result.push(checkSquareCaptureId(right));
-
-    //для темп
-    temp.push(top);
-    temp.push(bottom);
-    temp.push(left);
-    temp.push(right);
-
-    // hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
-    hightlightSquareIds = result.flat();
-
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
-    });
-
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
-    });
-
-    let captureIds = [];
-
-    for (let index = 0; index < temp.length; index++) {
-        const arr = temp[index];
-
-        for (let j = 0; j < arr.length; j++) {
-            const element = arr[j];
-
-            let checkPieceResult = checkWeatherPieceExistsOrNot(element);
-            if (
-                checkPieceResult &&
-                checkPieceResult.piece &&
-                checkPieceResult.piece.piece_name
-                    .toLowerCase()
-                    .includes("white")
-            ) {
-                break;
-            }
-
-            if (checkPieceOfOpponentOnElement(element, "white")) {
-                break;
-            }
-        }
-    }
-
-    globalStateRender();
+    handleWhitePieceClick(square, pos => rookMovesWrapper(pos, "white"));
 }
 
 //логика белого коня
 function whiteKnightClick(square) {
-    const piece = square.piece;
-
-    if (piece == selfHighlightState) {
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    if (square.captureHighlight) {
-        // конь хавает других
-        moveElement(selfHighlightState, piece.current_position);
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    //очистить всю доску от подсветок
-    clearPreviousSelfHighlight(selfHighlightState);
-    clearHighlightLocal();
-
-    //подсветка фигуры при клике
-    selfHighlight(piece);
-    hightlight_state = true;
-    selfHighlightState = piece;
-
-    //фигура для динамического движения
-    moveState = piece;
-
-    const current_pos = piece.current_position;
-    const flatArray = globalState.flat();
-
-    let hightlightSquareIds = giveKnightHighlightIds(current_pos);
-
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
-    });
-
-    let captureIds = [];
-
-    hightlightSquareIds.forEach(element => {
-        checkPieceOfOpponentOnElement(element, "white");
-    });
-
-    globalStateRender();
+    handleWhitePieceClick(square, giveKnightHighlightIds);
 }
 
 //логика белого ферзя
 function whiteQueenClick(square) {
-    const piece = square.piece;
-
-    if (piece == selfHighlightState) {
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    if (square.captureHighlight) {
-        // слон хавает других
-        moveElement(selfHighlightState, piece.current_position);
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    //очистить всю доску от подсветок
-    clearPreviousSelfHighlight(selfHighlightState);
-    clearHighlightLocal();
-
-    //подсветка фигуры при клике
-    selfHighlight(piece);
-    hightlight_state = true;
-    selfHighlightState = piece;
-
-    //фигура для динамического движения
-    moveState = piece;
-
-    const current_pos = piece.current_position;
-    const flatArray = globalState.flat();
-
-    let hightlightSquareIds = giveQueenHighlightIds(current_pos);
-    let temp = [];
-
-    const {
-        bottomLeft,
-        topLeft,
-        bottomRight,
-        topRight,
-        top,
-        right,
-        left,
-        bottom,
-    } = hightlightSquareIds;
-
-    let result = [];
-    result.push(checkSquareCaptureId(bottomLeft));
-    result.push(checkSquareCaptureId(topLeft));
-    result.push(checkSquareCaptureId(bottomRight));
-    result.push(checkSquareCaptureId(topRight));
-    result.push(checkSquareCaptureId(top));
-    result.push(checkSquareCaptureId(right));
-    result.push(checkSquareCaptureId(left));
-    result.push(checkSquareCaptureId(bottom));
-
-    //для темп
-    temp.push(bottomLeft);
-    temp.push(topLeft);
-    temp.push(bottomRight);
-    temp.push(topRight);
-    temp.push(top);
-    temp.push(right);
-    temp.push(left);
-    temp.push(bottom);
-
-    // hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
-    hightlightSquareIds = result.flat();
-
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
-    });
-
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
-    });
-
-    let captureIds = [];
-
-    for (let index = 0; index < temp.length; index++) {
-        const arr = temp[index];
-
-        for (let j = 0; j < arr.length; j++) {
-            const element = arr[j];
-
-            let checkPieceResult = checkWeatherPieceExistsOrNot(element);
-            if (
-                checkPieceResult &&
-                checkPieceResult.piece &&
-                checkPieceResult.piece.piece_name
-                    .toLowerCase()
-                    .includes("white")
-            ) {
-                break;
-            }
-
-            if (checkPieceOfOpponentOnElement(element, "white")) {
-                break;
-            }
-        }
-    }
-
-    globalStateRender();
+    handleWhitePieceClick(square, queenMovesWrapper);
 }
 //логика белого короля
 function whiteKingClick(square) {
@@ -888,339 +801,22 @@ function blackKingClick(square) {
 
 //логика черного ферзя
 function blackQueenClick(square) {
-    const piece = square.piece;
-
-    if (piece == selfHighlightState) {
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    if (square.captureHighlight) {
-        // слон хавает других
-        moveElement(selfHighlightState, piece.current_position);
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    //очистить всю доску от подсветок
-    clearPreviousSelfHighlight(selfHighlightState);
-    clearHighlightLocal();
-
-    //подсветка фигуры при клике
-    selfHighlight(piece);
-    hightlight_state = true;
-    selfHighlightState = piece;
-
-    //фигура для динамического движения
-    moveState = piece;
-
-    const current_pos = piece.current_position;
-    const flatArray = globalState.flat();
-
-    let hightlightSquareIds = giveQueenHighlightIds(current_pos);
-    let temp = [];
-
-    const {
-        bottomLeft,
-        topLeft,
-        bottomRight,
-        topRight,
-        top,
-        right,
-        left,
-        bottom,
-    } = hightlightSquareIds;
-
-    let result = [];
-    result.push(checkSquareCaptureId(bottomLeft));
-    result.push(checkSquareCaptureId(topLeft));
-    result.push(checkSquareCaptureId(bottomRight));
-    result.push(checkSquareCaptureId(topRight));
-    result.push(checkSquareCaptureId(top));
-    result.push(checkSquareCaptureId(right));
-    result.push(checkSquareCaptureId(left));
-    result.push(checkSquareCaptureId(bottom));
-
-    //для темп
-    temp.push(bottomLeft);
-    temp.push(topLeft);
-    temp.push(bottomRight);
-    temp.push(topRight);
-    temp.push(top);
-    temp.push(right);
-    temp.push(left);
-    temp.push(bottom);
-
-    hightlightSquareIds = result.flat();
-
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
-    });
-
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
-    });
-
-    let captureIds = [];
-
-    for (let index = 0; index < temp.length; index++) {
-        const arr = temp[index];
-
-        for (let j = 0; j < arr.length; j++) {
-            const element = arr[j];
-
-            let checkPieceResult = checkWeatherPieceExistsOrNot(element);
-            if (
-                checkPieceResult &&
-                checkPieceResult.piece &&
-                checkPieceResult.piece.piece_name
-                    .toLowerCase()
-                    .includes("black")
-            ) {
-                break;
-            }
-
-            if (checkPieceOfOpponentOnElement(element, "black")) {
-                break;
-            }
-        }
-    }
-
-    globalStateRender();
+    handleBlackPieceClick(square, queenMovesWrapper);
 }
 
 //логика черного коня
 function blackKnightClick(square) {
-    const piece = square.piece;
-
-    if (piece == selfHighlightState) {
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    if (square.captureHighlight) {
-        // конь хавает других
-        moveElement(selfHighlightState, piece.current_position);
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    //очистить всю доску от подсветок
-    clearPreviousSelfHighlight(selfHighlightState);
-    clearHighlightLocal();
-
-    //подсветка фигуры при клике
-    selfHighlight(piece);
-    hightlight_state = true;
-    selfHighlightState = piece;
-
-    //фигура для динамического движения
-    moveState = piece;
-
-    const current_pos = piece.current_position;
-    const flatArray = globalState.flat();
-
-    let hightlightSquareIds = giveKnightHighlightIds(current_pos);
-
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
-    });
-
-    let captureIds = [];
-
-    hightlightSquareIds.forEach(element => {
-        checkPieceOfOpponentOnElement(element, "black");
-    });
-
-    globalStateRender();
+    handleBlackPieceClick(square, giveKnightHighlightIds);
 }
 
 //логика черной ладьи
 function blackRookClick(square) {
-    const piece = square.piece;
-
-    if (piece == selfHighlightState) {
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    if (square.captureHighlight) {
-        // ладья хавает других
-        moveElement(selfHighlightState, piece.current_position);
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    //очистить всю доску от подсветок
-    clearPreviousSelfHighlight(selfHighlightState);
-    clearHighlightLocal();
-
-    //подсветка фигуры при клике
-    selfHighlight(piece);
-    hightlight_state = true;
-    selfHighlightState = piece;
-
-    //фигура для динамического движения
-    moveState = piece;
-
-    const current_pos = piece.current_position;
-    const flatArray = globalState.flat();
-
-    let hightlightSquareIds = giveRookHighlightIds(current_pos);
-    let temp = [];
-
-    const { top, bottom, left, right } = hightlightSquareIds;
-
-    let result = [];
-    result.push(checkSquareCaptureId(top));
-    result.push(checkSquareCaptureId(bottom));
-    result.push(checkSquareCaptureId(left));
-    result.push(checkSquareCaptureId(right));
-
-    //для темп
-    temp.push(top);
-    temp.push(bottom);
-    temp.push(left);
-    temp.push(right);
-
-    hightlightSquareIds = result.flat();
-
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
-    });
-
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
-    });
-
-    let captureIds = [];
-
-    for (let index = 0; index < temp.length; index++) {
-        const arr = temp[index];
-
-        for (let j = 0; j < arr.length; j++) {
-            const element = arr[j];
-
-            let checkPieceResult = checkWeatherPieceExistsOrNot(element);
-            if (
-                checkPieceResult &&
-                checkPieceResult.piece &&
-                checkPieceResult.piece.piece_name
-                    .toLowerCase()
-                    .includes("black")
-            ) {
-                break;
-            }
-
-            if (checkPieceOfOpponentOnElement(element, "black")) {
-                break;
-            }
-        }
-    }
-
-    globalStateRender();
+    handleBlackPieceClick(square, rookMovesWrapper);
 }
 
 //логика черного слона
 function blackBishopClick(square) {
-    const piece = square.piece;
-
-    if (piece == selfHighlightState) {
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    if (square.captureHighlight) {
-        // слон хавает других
-        moveElement(selfHighlightState, piece.current_position);
-        clearPreviousSelfHighlight(selfHighlightState);
-        clearHighlightLocal();
-        return;
-    }
-
-    //очистить всю доску от подсветок
-    clearPreviousSelfHighlight(selfHighlightState);
-    clearHighlightLocal();
-
-    //подсветка фигуры при клике
-    selfHighlight(piece);
-    hightlight_state = true;
-    selfHighlightState = piece;
-
-    //фигура для динамического движения
-    moveState = piece;
-
-    const current_pos = piece.current_position;
-    const flatArray = globalState.flat();
-
-    let hightlightSquareIds = giveBishopHighlightIds(current_pos);
-    let temp = [];
-
-    const { bottomLeft, topLeft, bottomRight, topRight } = hightlightSquareIds;
-
-    let result = [];
-    result.push(checkSquareCaptureId(bottomLeft));
-    result.push(checkSquareCaptureId(topLeft));
-    result.push(checkSquareCaptureId(bottomRight));
-    result.push(checkSquareCaptureId(topRight));
-
-    //для темп
-    temp.push(bottomLeft);
-    temp.push(topLeft);
-    temp.push(bottomRight);
-    temp.push(topRight);
-
-    // hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
-    hightlightSquareIds = result.flat();
-
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
-    });
-
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
-    });
-
-    let captureIds = [];
-
-    for (let index = 0; index < temp.length; index++) {
-        const arr = temp[index];
-
-        for (let j = 0; j < arr.length; j++) {
-            const element = arr[j];
-
-            let checkPieceResult = checkWeatherPieceExistsOrNot(element);
-            if (
-                checkPieceResult &&
-                checkPieceResult.piece &&
-                checkPieceResult.piece.piece_name
-                    .toLowerCase()
-                    .includes("black")
-            ) {
-                break;
-            }
-
-            if (checkPieceOfOpponentOnElement(element, "black")) {
-                break;
-            }
-        }
-    }
-
-    globalStateRender();
+    handleBlackPieceClick(square, pos => bishopMovesWrapper(pos, "black"));
 }
 
 //логика черных пешек
@@ -1316,16 +912,23 @@ function GlobalEvent() {
 
             const square = keySquareMapper[clickId];
 
-            if (square && square.piece && square.piece.piece_name) {
-                if (
-                    (square.piece.piece_name.includes("white") &&
-                        inTurn === "black") ||
+            if (square.captureHighlight && selfHighlightState) {
+                moveElement(selfHighlightState, square.id);
+                clearPreviousSelfHighlight(selfHighlightState);
+                clearHighlightLocal();
+                moveState = null;
+                return;
+            }
+
+            // Блокировать клик по фигуре противника, если нет captureHighlight
+            if (
+                square?.piece &&
+                ((square.piece.piece_name.includes("white") &&
+                    inTurn === "black") ||
                     (square.piece.piece_name.includes("black") &&
-                        inTurn === "white")
-                ) {
-                    captureInTurn(square);
-                    return;
-                }
+                        inTurn === "white"))
+            ) {
+                return;
             }
 
             if (square.piece.piece_name == "white_pawn") {

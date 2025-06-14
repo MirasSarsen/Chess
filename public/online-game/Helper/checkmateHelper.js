@@ -163,22 +163,27 @@ export function isCheckmate(currentTurn) {
 }
 
 function showCheckIfKing(piece, pieceId, keySquareMapper) {
+    console.log("Вызван showCheckIfKing:", piece?.piece_name, pieceId);
+
     const color = piece.color;
+    const enemyColor = color === "white" ? "black" : "white";
     const name = piece.piece_name;
 
     let attackSquares = [];
 
     if (name.includes("queen")) {
-        attackSquares = giveQueenCaptureIds(pieceId, color);
+        attackSquares = giveQueenCaptureIds(pieceId, enemyColor);
     } else if (name.includes("rook")) {
-        attackSquares = giveRookCaptureIds(pieceId, color);
+        attackSquares = giveRookCaptureIds(pieceId, enemyColor);
     } else if (name.includes("bishop")) {
-        attackSquares = giveBishopCaptureIds(pieceId, color);
+        attackSquares = giveBishopCaptureIds(pieceId, enemyColor);
     } else if (name.includes("knight")) {
-        attackSquares = giveKnightCaptureIds(pieceId, color);
+        attackSquares = giveKnightCaptureIds(pieceId, enemyColor);
     } else if (name.includes("king")) {
-        attackSquares = giveKingCaptureIds(pieceId, color);
+        attackSquares = giveKingCaptureIds(pieceId, enemyColor);
     }
+
+    console.log("Функция атаки вернула:", attackSquares);
 
     const kingId = Object.keys(keySquareMapper).find(id => {
         const el = keySquareMapper[id];
@@ -190,7 +195,15 @@ function showCheckIfKing(piece, pieceId, keySquareMapper) {
     });
 
     if (kingId && attackSquares.includes(kingId)) {
-        showCheckAlert(); // Показать "Шах!"
+        showCheckAlert();
+        highlightKingSquare(kingId);
+    }
+}
+function highlightKingSquare(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.add("check-highlight");
+        setTimeout(() => el.classList.remove("check-highlight"), 2000);
     }
 }
 

@@ -11,6 +11,33 @@ body {
     margin-top: 10%;
 }
 
+.check-highlight {
+    background-color: rgba(255, 0, 0, 0.4);
+    transition: background-color 0.3s ease;
+}
+
+.check-alert {
+    animation: fadeInOut 2s ease;
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
 .squareRow {
     display: flex;
 }
