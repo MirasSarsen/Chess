@@ -35,11 +35,14 @@ function checkPieceOfOpponentOnElementNoDom(id, color) {
 }
 
 //функция для проверки фигуры перед шахом (чтобы шах не сработал когда впереди фигура)
-function checkWeatherPieceExistsOrNot(squareId) {
+function checkWeatherPieceExistsOrNot(squareId, currentTurn = null) {
     const square = keySquareMapper[squareId];
 
-    if (square.piece) {
-        return square;
+    if (square?.piece) {
+        if (!currentTurn) return square;
+
+        const isEnemy = square.piece.color !== currentTurn;
+        return isEnemy ? square : false;
     } else {
         return false;
     }

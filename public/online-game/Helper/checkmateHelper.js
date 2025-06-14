@@ -99,9 +99,14 @@ function getValidMoves(piece, currentTurn) {
                 moves.push(front2);
             }
 
+            function isEnemyOnSquare(squareId, ownColor) {
+                const square = keySquareMapper[squareId];
+                return square?.piece && square.piece.color !== ownColor;
+            }
+
             // Взятия по диагонали
             [captureLeft, captureRight].forEach(square => {
-                if (checkWeatherPieceExistsOrNot(square, currentTurn)) {
+                if (isEnemyOnSquare(square, currentTurn)) {
                     moves.push(square);
                 }
             });

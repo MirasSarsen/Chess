@@ -111,9 +111,7 @@ function moveElement(piece, id, internalMove = false) {
         } else {
             const attacked = getAttackedSquares(opponentColor, clonedState);
             if (attacked.includes(kingSquare.id)) {
-                console.warn(
-                    `Нельзя сходить: ${ourColor} король окажется под шахом`
-                );
+                console.log("Ход невозможен: король будет под шахом");
                 return;
             }
         }
@@ -283,16 +281,15 @@ function handleWhitePieceClick(square, getRawMovesCallback) {
         ? filterLegalMoves(piece, rawMoves, globalState, getAttackedSquares)
         : rawMoves;
 
+    // Подсветка допустимых ходов
     legalMoves.forEach(id => {
         const square = keySquareMapper[id];
-        if (!square) return;
+        if (square) square.highlight = true;
+    });
 
-        const targetPiece = square.piece;
-        if (targetPiece && targetPiece.color !== currentColor) {
-            square.captureHighlight = true;
-        } else {
-            square.highlight = true;
-        }
+    // Подсветка возможных взятий
+    legalMoves.forEach(id => {
+        checkPieceOfOpponentOnElement(id, currentColor);
     });
 
     globalStateRender();
@@ -343,15 +340,7 @@ function handleBlackPieceClick(square, getRawMovesCallback) {
 
     // Подсветка возможных взятий
     legalMoves.forEach(id => {
-        const square = keySquareMapper[id];
-        if (!square) return;
-
-        const targetPiece = square.piece;
-        if (targetPiece && targetPiece.color !== currentColor) {
-            square.captureHighlight = true;
-        } else {
-            square.highlight = true;
-        }
+        checkPieceOfOpponentOnElement(id, currentColor);
     });
 
     globalStateRender();
@@ -397,7 +386,7 @@ function movePieceFromXToY(from, to) {
     from.piece = null;
     globalStateRender();
 }
-function trimLineOnFirstPiece(arr, color) {
+function trimLineOnFirstPiece(arr) {
     const result = [];
 
     for (const id of arr) {
@@ -407,7 +396,7 @@ function trimLineOnFirstPiece(arr, color) {
         if (!square.piece) {
             result.push(id);
         } else {
-            if (square.piece.color === color) break; // своя фигура — стоп
+            if (square.piece.color === "white") break; // своя фигура = стоп
             result.push(id); // вражескую — можно съесть
             break;
         }
@@ -416,30 +405,30 @@ function trimLineOnFirstPiece(arr, color) {
     return result;
 }
 
-function bishopMovesWrapper(pos, color) {
+function bishopMovesWrapper(pos) {
     const dirs = giveBishopHighlightIds(pos); // возвращает { topLeft, topRight, ... }
 
     return [
-        ...trimLineOnFirstPiece(dirs.topLeft, color),
-        ...trimLineOnFirstPiece(dirs.topRight, color),
-        ...trimLineOnFirstPiece(dirs.bottomLeft, color),
-        ...trimLineOnFirstPiece(dirs.bottomRight, color),
+        ...trimLineOnFirstPiece(dirs.topLeft),
+        ...trimLineOnFirstPiece(dirs.topRight),
+        ...trimLineOnFirstPiece(dirs.bottomLeft),
+        ...trimLineOnFirstPiece(dirs.bottomRight),
     ];
 }
 
-function rookMovesWrapper(pos, color) {
+function rookMovesWrapper(pos) {
     const dirs = giveRookHighlightIds(pos); // возвращает { top, bottom, left, right }
 
     return [
-        ...trimLineOnFirstPiece(dirs.top, color),
-        ...trimLineOnFirstPiece(dirs.bottom, color),
-        ...trimLineOnFirstPiece(dirs.left, color),
-        ...trimLineOnFirstPiece(dirs.right, color),
+        ...trimLineOnFirstPiece(dirs.top),
+        ...trimLineOnFirstPiece(dirs.bottom),
+        ...trimLineOnFirstPiece(dirs.left),
+        ...trimLineOnFirstPiece(dirs.right),
     ];
 }
 
-function queenMovesWrapper(pos, color) {
-    return [...bishopMovesWrapper(pos, color), ...rookMovesWrapper(pos, color)];
+function queenMovesWrapper(pos) {
+    return [...bishopMovesWrapper(pos), ...rookMovesWrapper(pos)];
 }
 
 //логика белых пешек
@@ -490,6 +479,24 @@ function whitePawnClick(square) {
             element.highlight = true;
         });
 
+        const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
+            Number(current_pos[1]) + 1
+        }`;
+        const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
+            Number(current_pos[1]) + 1
+        }`;
+
+        let captureIds = [col1, col2];
+        captureIds.forEach(id => {
+            checkPieceOfOpponentOnElement(id, "white");
+        });
+
+        //с той же позиции
+        hightlightSquareIds.forEach(hightlight => {
+            const element = keySquareMapper[hightlight];
+            element.highlight = true;
+        });
+
         globalStateRender();
     } else {
         const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
@@ -524,12 +531,12 @@ function whitePawnClick(square) {
 
 //логика белого слона
 function whiteBishopClick(square) {
-    handleWhitePieceClick(square, pos => bishopMovesWrapper(pos, "white"));
+    handleWhitePieceClick(square, bishopMovesWrapper);
 }
 
 //логика белой ладьи
 function whiteRookClick(square) {
-    handleWhitePieceClick(square, pos => rookMovesWrapper(pos, "white"));
+    handleWhitePieceClick(square, rookMovesWrapper);
 }
 
 //логика белого коня
@@ -816,7 +823,7 @@ function blackRookClick(square) {
 
 //логика черного слона
 function blackBishopClick(square) {
-    handleBlackPieceClick(square, pos => bishopMovesWrapper(pos, "black"));
+    handleBlackPieceClick(square, bishopMovesWrapper);
 }
 
 //логика черных пешек
@@ -866,6 +873,20 @@ function blackPawnClick(square) {
             element.highlight = true;
         });
 
+        const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
+            Number(current_pos[1]) - 1
+        }`;
+        const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
+            Number(current_pos[1]) - 1
+        }`;
+
+        let captureIds = [col1, col2];
+        // captureIds = checkSquareCaptureId(captureIds);
+
+        captureIds.forEach(element => {
+            checkPieceOfOpponentOnElement(element, "black");
+        });
+
         globalStateRender();
     } else {
         const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
@@ -912,23 +933,37 @@ function GlobalEvent() {
 
             const square = keySquareMapper[clickId];
 
-            if (square.captureHighlight && selfHighlightState) {
-                moveElement(selfHighlightState, square.id);
-                clearPreviousSelfHighlight(selfHighlightState);
-                clearHighlightLocal();
-                moveState = null;
-                return;
+            const myTurn = inTurn; // чей сейчас ход
+            if (isInCheck(myTurn)) {
+                const moveList = getRawMoves(clickedPiece); // получить обычные ходы (до фильтрации)
+                const legalMoves = filterLegalMoves(
+                    clickedPiece,
+                    moveList,
+                    globalState,
+                    getAttackedSquares
+                );
+
+                if (legalMoves.length === 0) {
+                    console.log(
+                        "Фигура не может спасти от шаха. Ход запрещён."
+                    );
+                    return;
+                }
+
+                // Подсветить только legalMoves
+                highlightMoves(legalMoves);
             }
 
-            // Блокировать клик по фигуре противника, если нет captureHighlight
-            if (
-                square?.piece &&
-                ((square.piece.piece_name.includes("white") &&
-                    inTurn === "black") ||
+            if (square && square.piece && square.piece.piece_name) {
+                if (
+                    (square.piece.piece_name.includes("white") &&
+                        inTurn === "black") ||
                     (square.piece.piece_name.includes("black") &&
-                        inTurn === "white"))
-            ) {
-                return;
+                        inTurn === "white")
+                ) {
+                    captureInTurn(square);
+                    return;
+                }
             }
 
             if (square.piece.piece_name == "white_pawn") {
