@@ -281,7 +281,11 @@ function handleWhitePieceClick(square, getRawMovesCallback) {
     selfHighlightState = piece;
     moveState = piece;
 
-    const rawMoves = getRawMovesCallback(piece.current_position);
+    const rawMoves = getRawMovesCallback(
+        piece.current_position,
+        globalState,
+        piece.color
+    );
 
     // 🛑 Если под шахом, фильтруем возможные ходы
     const currentColor = "white";
@@ -307,14 +311,12 @@ function handleBlackPieceClick(square, getRawMovesCallback) {
     const piece = square.piece;
     if (!piece) return;
 
-    // Повторный клик на уже подсвеченной фигуре — снять подсветку
     if (piece === selfHighlightState) {
         clearPreviousSelfHighlight(selfHighlightState);
         clearHighlightLocal();
         return;
     }
 
-    // Ход/поедание
     if (square.captureHighlight) {
         moveElement(selfHighlightState, piece.current_position);
         clearPreviousSelfHighlight(selfHighlightState);
@@ -322,25 +324,30 @@ function handleBlackPieceClick(square, getRawMovesCallback) {
         return;
     }
 
-    // Очистка доски
     clearPreviousSelfHighlight(selfHighlightState);
     clearHighlightLocal();
 
-    // Подсветка выбранной фигуры
     selfHighlight(piece);
     hightlight_state = true;
     selfHighlightState = piece;
     moveState = piece;
 
-    const rawMoves = getRawMovesCallback(piece.current_position);
-
-    // 🛑 Если под шахом, фильтруем возможные ходы
     const currentColor = "black";
-    const legalMoves = isInCheck(currentColor)
-        ? filterLegalMoves(piece, rawMoves, globalState, getAttackedSquares)
+    const rawMoves = getRawMovesCallback(piece.current_position, globalState);
+    const possibleMoves = Object.values(rawMoves).flat
+        ? Object.values(rawMoves).flat()
         : rawMoves;
 
-    // Подсветка допустимых ходов
+    const legalMoves = isInCheck(currentColor)
+        ? filterLegalMoves(
+              piece,
+              possibleMoves,
+              globalState,
+              getAttackedSquares
+          )
+        : possibleMoves;
+
+    // Подсветка доступных клеток
     legalMoves.forEach(id => {
         const square = keySquareMapper[id];
         if (square) square.highlight = true;
@@ -397,7 +404,7 @@ function movePieceFromXToY(from, to) {
     from.piece = null;
     globalStateRender();
 }
-function trimLineOnFirstPiece(arr) {
+function trimLineOnFirstPiece(arr, currentColor) {
     const result = [];
 
     for (const id of arr) {
@@ -407,8 +414,8 @@ function trimLineOnFirstPiece(arr) {
         if (!square.piece) {
             result.push(id);
         } else {
-            if (square.piece.color === "white") break; // своя фигура = стоп
-            result.push(id); // вражескую — можно съесть
+            if (square.piece.color === currentColor) break; // своя — стоп
+            result.push(id); // враг — можно съесть
             break;
         }
     }
@@ -416,25 +423,25 @@ function trimLineOnFirstPiece(arr) {
     return result;
 }
 
-function bishopMovesWrapper(pos) {
-    const dirs = giveBishopHighlightIds(pos); // возвращает { topLeft, topRight, ... }
+function bishopMovesWrapper(pos, color) {
+    const dirs = giveBishopHighlightIds(pos);
 
     return [
-        ...trimLineOnFirstPiece(dirs.topLeft),
-        ...trimLineOnFirstPiece(dirs.topRight),
-        ...trimLineOnFirstPiece(dirs.bottomLeft),
-        ...trimLineOnFirstPiece(dirs.bottomRight),
+        ...trimLineOnFirstPiece(dirs.topLeft, color),
+        ...trimLineOnFirstPiece(dirs.topRight, color),
+        ...trimLineOnFirstPiece(dirs.bottomLeft, color),
+        ...trimLineOnFirstPiece(dirs.bottomRight, color),
     ];
 }
 
-function rookMovesWrapper(pos) {
-    const dirs = giveRookHighlightIds(pos); // возвращает { top, bottom, left, right }
+function rookMovesWrapper(pos, color) {
+    const dirs = giveRookHighlightIds(pos);
 
     return [
-        ...trimLineOnFirstPiece(dirs.top),
-        ...trimLineOnFirstPiece(dirs.bottom),
-        ...trimLineOnFirstPiece(dirs.left),
-        ...trimLineOnFirstPiece(dirs.right),
+        ...trimLineOnFirstPiece(dirs.top, color),
+        ...trimLineOnFirstPiece(dirs.bottom, color),
+        ...trimLineOnFirstPiece(dirs.left, color),
+        ...trimLineOnFirstPiece(dirs.right, color),
     ];
 }
 

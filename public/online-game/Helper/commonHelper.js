@@ -4,12 +4,11 @@ import { keySquareMapper } from "../index.js";
 //функция шаха если фигура рядом с противником
 function checkPieceOfOpponentOnElement(id, color) {
     const opponentColor = color === "white" ? "black" : "white";
-
     const element = keySquareMapper[id];
 
-    if (!element) return false;
+    if (!element || !element.piece) return false;
 
-    if (element.piece && element.piece.piece_name.includes(opponentColor)) {
+    if (element.piece.color === opponentColor) {
         const el = document.getElementById(id);
         el.classList.add("captureColor");
         element.captureHighlight = true;
@@ -138,31 +137,33 @@ function giveBishopHighlightIds(id) {
 }
 //функция для подсветки шахов слона
 function giveBishopCaptureIds(id, color, state = globalState) {
-    if (!id) return [];
-
-    const hightlightSquareIds = giveBishopHighlightIds(id);
     const directions = [
-        hightlightSquareIds.bottomLeft,
-        hightlightSquareIds.topLeft,
-        hightlightSquareIds.bottomRight,
-        hightlightSquareIds.topRight,
+        [1, 1],
+        [-1, 1],
+        [1, -1],
+        [-1, -1],
     ];
-
     const result = [];
 
-    for (const direction of directions) {
-        for (const squareId of direction) {
+    for (const [df, dr] of directions) {
+        let file = id[0];
+        let rank = parseInt(id[1]);
+
+        while (true) {
+            file = String.fromCharCode(file.charCodeAt(0) + df);
+            rank += dr;
+
+            if (file < "a" || file > "h" || rank < 1 || rank > 8) break;
+
+            const squareId = `${file}${rank}`;
             const square = state.flat().find(s => s.id === squareId);
-            if (!square) continue;
+            if (!square) break;
 
             if (square.piece) {
                 if (square.piece.color !== color) {
                     result.push(squareId); // можно съесть
                 }
-                break; // путь перекрыт
-            } else {
-                // просто пустая клетка — не добавляем
-                continue;
+                break; // путь заблокирован
             }
         }
     }
@@ -172,30 +173,33 @@ function giveBishopCaptureIds(id, color, state = globalState) {
 
 //функция для подсветки шахов слона
 function giveRookCaptureIds(id, color, state = globalState) {
-    if (!id) return [];
-
-    const hightlightSquareIds = giveRookHighlightIds(id);
     const directions = [
-        hightlightSquareIds.bottom,
-        hightlightSquareIds.top,
-        hightlightSquareIds.right,
-        hightlightSquareIds.left,
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1], // вниз, вверх, вправо, влево
     ];
-
     const result = [];
 
-    for (const direction of directions) {
-        for (const squareId of direction) {
+    for (const [df, dr] of directions) {
+        let file = id[0];
+        let rank = parseInt(id[1]);
+
+        while (true) {
+            file = String.fromCharCode(file.charCodeAt(0) + df);
+            rank += dr;
+
+            if (file < "a" || file > "h" || rank < 1 || rank > 8) break;
+
+            const squareId = `${file}${rank}`;
             const square = state.flat().find(s => s.id === squareId);
-            if (!square) continue;
+            if (!square) break;
 
             if (square.piece) {
                 if (square.piece.color !== color) {
-                    result.push(squareId);
+                    result.push(squareId); // можно съесть
                 }
-                break;
-            } else {
-                continue;
+                break; // дальше путь заблокирован
             }
         }
     }
@@ -211,236 +215,98 @@ function giveQueenCaptureIds(id, color, state = globalState) {
 }
 
 //функция для подсветки ходов ладьи
-function giveRookHighlightIds(id) {
-    let finalReturnArray = [];
-
-    //выдает айди фигуры сверху слева
-    function top(id) {
-        let alpha = id[0];
-        let num = Number(id[1]);
-        let resultArray = [];
-
-        while (num != 8) {
-            // alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
-            num = num + 1;
-            resultArray.push(`${alpha}${num}`);
-        }
-
-        return resultArray;
-    }
-
-    //выдает айди фигуры снизу слева
-    function bottom(id) {
-        let alpha = id[0];
-        let num = Number(id[1]);
-        let resultArray = [];
-
-        while (num != 1) {
-            // alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
-            num = num - 1;
-            resultArray.push(`${alpha}${num}`);
-        }
-
-        return resultArray;
-    }
-
-    //находит айди сверху справа
-    function right(id) {
-        let alpha = id[0];
-        let num = Number(id[1]);
-        let resultArray = [];
-
-        while (alpha != "h") {
-            alpha = String.fromCharCode(alpha.charCodeAt(0) + 1);
-            // num = num - 0;
-            resultArray.push(`${alpha}${num}`);
-        }
-
-        return resultArray;
-    }
-
-    //находит айди снизу справа
-    function left(id) {
-        let alpha = id[0];
-        let num = Number(id[1]);
-        let resultArray = [];
-
-        while (alpha != "a") {
-            alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
-            // num = num - 0;
-            resultArray.push(`${alpha}${num}`);
-        }
-
-        return resultArray;
-    }
-
-    return {
-        top: top(id),
-        bottom: bottom(id),
-        right: right(id),
-        left: left(id),
+function giveRookHighlightIds(id, state = globalState) {
+    const directions = {
+        top: [],
+        bottom: [],
+        right: [],
+        left: [],
     };
+
+    const file = id[0];
+    const rank = parseInt(id[1]);
+
+    // Вверх
+    for (let r = rank + 1; r <= 8; r++) {
+        const squareId = `${file}${r}`;
+        const square = state.flat().find(s => s.id === squareId);
+        if (!square) break;
+        if (square.piece) {
+            directions.top.push(squareId);
+            break;
+        }
+        directions.top.push(squareId);
+    }
+
+    // Вниз
+    for (let r = rank - 1; r >= 1; r--) {
+        const squareId = `${file}${r}`;
+        const square = state.flat().find(s => s.id === squareId);
+        if (!square) break;
+        if (square.piece) {
+            directions.bottom.push(squareId);
+            break;
+        }
+        directions.bottom.push(squareId);
+    }
+
+    // Вправо
+    for (let f = file.charCodeAt(0) + 1; f <= "h".charCodeAt(0); f++) {
+        const squareId = `${String.fromCharCode(f)}${rank}`;
+        const square = state.flat().find(s => s.id === squareId);
+        if (!square) break;
+        if (square.piece) {
+            directions.right.push(squareId);
+            break;
+        }
+        directions.right.push(squareId);
+    }
+
+    // Влево
+    for (let f = file.charCodeAt(0) - 1; f >= "a".charCodeAt(0); f--) {
+        const squareId = `${String.fromCharCode(f)}${rank}`;
+        const square = state.flat().find(s => s.id === squareId);
+        if (!square) break;
+        if (square.piece) {
+            directions.left.push(squareId);
+            break;
+        }
+        directions.left.push(squareId);
+    }
+
+    return directions;
 }
 
 //функция для подсветки ходов коня
 function giveKnightHighlightIds(id) {
-    if (!id) {
-        return;
-    }
+    if (!id) return [];
 
-    function left() {
-        let alpha = id[0];
-        let num = Number(id[1]);
-        let resultArray = [];
+    const file = id[0];
+    const rank = parseInt(id[1]);
 
-        let temp = 0;
+    const moves = [
+        [2, 1],
+        [1, 2],
+        [-1, 2],
+        [-2, 1],
+        [-2, -1],
+        [-1, -2],
+        [1, -2],
+        [2, -1],
+    ];
 
-        while (alpha != "a") {
-            if (temp == 2) {
-                break;
-            }
-            alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
-            // num = num - 0;
-            resultArray.push(`${alpha}${num}`);
-            temp += 1;
-        }
+    const result = [];
 
-        if (resultArray.length == 2) {
-            let finalReturnArray = [];
+    for (const [df, dr] of moves) {
+        const newFile = String.fromCharCode(file.charCodeAt(0) + df);
+        const newRank = rank + dr;
 
-            const lastElement = resultArray[resultArray.length - 1];
-            let alpha = lastElement[0];
-            let number = Number(lastElement[1]);
-            if (number < 8) {
-                finalReturnArray.push(`${alpha}${number + 1}`);
-            }
-            if (number > 1) {
-                finalReturnArray.push(`${alpha}${number - 1}`);
-            }
-            // resultArray.push(`${Number(lastElement[1])}`);
-            return finalReturnArray;
-        } else {
-            return [];
+        if (newFile >= "a" && newFile <= "h" && newRank >= 1 && newRank <= 8) {
+            result.push(`${newFile}${newRank}`);
         }
     }
 
-    function top() {
-        let alpha = id[0];
-        let num = Number(id[1]);
-        let resultArray = [];
-
-        let temp = 0;
-
-        while (num != "8") {
-            if (temp == 2) {
-                break;
-            }
-
-            num = num + 1;
-            // alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
-            // num = num - 0;
-            resultArray.push(`${alpha}${num}`);
-            temp += 1;
-        }
-
-        if (resultArray.length == 2) {
-            let finalReturnArray = [];
-
-            const lastElement = resultArray[resultArray.length - 1];
-            let alpha = lastElement[0];
-            let number = Number(lastElement[1]);
-            if (alpha != "a") {
-                let alpha2 = String.fromCharCode(alpha.charCodeAt(0) - 1);
-                finalReturnArray.push(`${alpha2}${number}`);
-            }
-            if (alpha != "h") {
-                let alpha2 = String.fromCharCode(alpha.charCodeAt(0) + 1);
-                finalReturnArray.push(`${alpha2}${number}`);
-            }
-            // resultArray.push(`${Number(lastElement[1])}`);
-            return finalReturnArray;
-        } else {
-            return [];
-        }
-    }
-
-    function bottom() {
-        let alpha = id[0];
-        let num = Number(id[1]);
-        let resultArray = [];
-
-        let temp = 0;
-
-        while (num != "1") {
-            if (temp == 2) {
-                break;
-            }
-
-            num = num - 1;
-            // alpha = String.fromCharCode(alpha.charCodeAt(0) - 1);
-            // num = num - 0;
-            resultArray.push(`${alpha}${num}`);
-            temp += 1;
-        }
-
-        if (resultArray.length == 2) {
-            let finalReturnArray = [];
-
-            const lastElement = resultArray[resultArray.length - 1];
-            let alpha = lastElement[0];
-            let number = Number(lastElement[1]);
-            if (alpha != "a") {
-                let alpha2 = String.fromCharCode(alpha.charCodeAt(0) - 1);
-                finalReturnArray.push(`${alpha2}${number}`);
-            }
-            if (alpha != "h") {
-                let alpha2 = String.fromCharCode(alpha.charCodeAt(0) + 1);
-                finalReturnArray.push(`${alpha2}${number}`);
-            }
-            // resultArray.push(`${Number(lastElement[1])}`);
-            return finalReturnArray;
-        } else {
-            return [];
-        }
-    }
-
-    function right() {
-        let alpha = id[0];
-        let num = Number(id[1]);
-        let resultArray = [];
-
-        let temp = 0;
-
-        while (alpha != "h") {
-            if (temp == 2) {
-                break;
-            }
-            alpha = String.fromCharCode(alpha.charCodeAt(0) + 1);
-            // num = num - 0;
-            resultArray.push(`${alpha}${num}`);
-            temp += 1;
-        }
-
-        if (resultArray.length == 2) {
-            let finalReturnArray = [];
-
-            const lastElement = resultArray[resultArray.length - 1];
-            let alpha = lastElement[0];
-            let number = Number(lastElement[1]);
-            if (number < 8) {
-                finalReturnArray.push(`${alpha}${number + 1}`);
-            }
-            if (number > 1) {
-                finalReturnArray.push(`${alpha}${number - 1}`);
-            }
-            // resultArray.push(`${Number(lastElement[1])}`);
-            return finalReturnArray;
-        } else {
-            return [];
-        }
-    }
-
-    return [...top(), ...bottom(), ...left(), ...right()];
+    return result;
 }
 
 //функция для подсветки ходов ферзя
@@ -491,6 +357,22 @@ function giveKingHighlightIds(id) {
     return returnResult;
 }
 
+function generateLineMoves(startId, df, dr) {
+    const moves = [];
+    let file = startId[0];
+    let rank = parseInt(startId[1]);
+
+    while (true) {
+        file = String.fromCharCode(file.charCodeAt(0) + df);
+        rank += dr;
+
+        if (file < "a" || file > "h" || rank < 1 || rank > 8) break;
+        moves.push(`${file}${rank}`);
+    }
+
+    return moves;
+}
+
 //функция для подсветки шахов короля
 function giveKingCaptureIds(id, color, state = globalState) {
     if (!id) return [];
@@ -532,10 +414,10 @@ function givePawnCaptureIds(id, color, state = globalState) {
     const leftFile = String.fromCharCode(file.charCodeAt(0) - 1);
     const rightFile = String.fromCharCode(file.charCodeAt(0) + 1);
 
-    const possibleCaptures = [
-        `${leftFile}${nextRank}`,
-        `${rightFile}${nextRank}`,
-    ];
+    const possibleCaptures = [];
+
+    if (leftFile >= "a") possibleCaptures.push(`${leftFile}${nextRank}`);
+    if (rightFile <= "h") possibleCaptures.push(`${rightFile}${nextRank}`);
 
     for (const squareId of possibleCaptures) {
         const square = state.flat().find(s => s.id === squareId);
