@@ -197,3 +197,23 @@ header {
     padding: 10px;
     margin-left: auto;
 }
+
+.highlightRed {
+    outline: 3px solid red;
+    box-shadow: 0 0 10px red;
+    animation: pulseRed 1s infinite;
+}
+
+@keyframes pulseRed {
+    0% {
+        box-shadow: 0 0 5px red;
+    }
+
+    50% {
+        box-shadow: 0 0 15px red;
+    }
+
+    100% {
+        box-shadow: 0 0 5px red;
+    }
+}

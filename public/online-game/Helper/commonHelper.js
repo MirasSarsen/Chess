@@ -137,100 +137,77 @@ function giveBishopHighlightIds(id) {
     };
 }
 //функция для подсветки шахов слона
-function giveBishopCaptureIds(id, color) {
-    if (!id) {
-        return [];
-    }
+function giveBishopCaptureIds(id, color, state = globalState) {
+    if (!id) return [];
 
-    let hightlightSquareIds = giveBishopHighlightIds(id);
-    let temp = [];
+    const hightlightSquareIds = giveBishopHighlightIds(id);
+    const directions = [
+        hightlightSquareIds.bottomLeft,
+        hightlightSquareIds.topLeft,
+        hightlightSquareIds.bottomRight,
+        hightlightSquareIds.topRight,
+    ];
 
-    const { bottomLeft, topLeft, bottomRight, topRight } = hightlightSquareIds;
-    let returnArr = [];
+    const result = [];
 
-    //для темп
-    temp.push(bottomLeft);
-    temp.push(topLeft);
-    temp.push(bottomRight);
-    temp.push(topRight);
+    for (const direction of directions) {
+        for (const squareId of direction) {
+            const square = state.flat().find(s => s.id === squareId);
+            if (!square) continue;
 
-    for (let index = 0; index < temp.length; index++) {
-        const arr = temp[index];
-
-        for (let j = 0; j < arr.length; j++) {
-            const element = arr[j];
-
-            let checkPieceResult = checkWeatherPieceExistsOrNot(element);
-            if (
-                checkPieceResult &&
-                checkPieceResult.piece &&
-                checkPieceResult.piece.piece_name.toLowerCase().includes(color)
-            ) {
-                break;
-            }
-
-            if (checkPieceOfOpponentOnElementNoDom(element, color)) {
-                returnArr.push(element);
-                break;
+            if (square.piece) {
+                if (square.piece.color !== color) {
+                    result.push(squareId); // можно съесть
+                }
+                break; // путь перекрыт
+            } else {
+                // просто пустая клетка — не добавляем
+                continue;
             }
         }
     }
 
-    return returnArr;
+    return result;
 }
+
 //функция для подсветки шахов слона
-function giveRookCaptureIds(id, color) {
-    if (!id) {
-        return [];
-    }
+function giveRookCaptureIds(id, color, state = globalState) {
+    if (!id) return [];
 
-    let hightlightSquareIds = giveRookHighlightIds(id);
-    let temp = [];
+    const hightlightSquareIds = giveRookHighlightIds(id);
+    const directions = [
+        hightlightSquareIds.bottom,
+        hightlightSquareIds.top,
+        hightlightSquareIds.right,
+        hightlightSquareIds.left,
+    ];
 
-    const { bottom, top, right, left } = hightlightSquareIds;
-    let returnArr = [];
+    const result = [];
 
-    //для темп
-    temp.push(bottom);
-    temp.push(top);
-    temp.push(right);
-    temp.push(left);
+    for (const direction of directions) {
+        for (const squareId of direction) {
+            const square = state.flat().find(s => s.id === squareId);
+            if (!square) continue;
 
-    for (let index = 0; index < temp.length; index++) {
-        const arr = temp[index];
-
-        for (let j = 0; j < arr.length; j++) {
-            const element = arr[j];
-
-            let checkPieceResult = checkWeatherPieceExistsOrNot(element);
-            if (
-                checkPieceResult &&
-                checkPieceResult.piece &&
-                checkPieceResult.piece.piece_name.toLowerCase().includes(color)
-            ) {
+            if (square.piece) {
+                if (square.piece.color !== color) {
+                    result.push(squareId);
+                }
                 break;
-            }
-
-            if (checkPieceOfOpponentOnElementNoDom(element, color)) {
-                returnArr.push(element);
-                break;
+            } else {
+                continue;
             }
         }
     }
 
-    return returnArr;
+    return result;
 }
 
 //функция для подсветки шахов слона
-function giveQueenCaptureIds(id, color) {
-    if (!id) {
-        return [];
-    }
-
-    let returnArr = [];
-    returnArr.push(giveBishopCaptureIds(id, color));
-    returnArr.push(giveRookCaptureIds(id, color));
-    return returnArr.flat();
+function giveQueenCaptureIds(id, color, state = globalState) {
+    const bishop = giveBishopCaptureIds(id, color, state);
+    const rook = giveRookCaptureIds(id, color, state);
+    return [...bishop, ...rook];
 }
 
 //функция для подсветки ходов ладьи
@@ -515,65 +492,55 @@ function giveKingHighlightIds(id) {
 }
 
 //функция для подсветки шахов короля
-function giveKingCaptureIds(id, color) {
-    if (!id) {
-        return [];
-    }
+function giveKingCaptureIds(id, color, state = globalState) {
+    if (!id) return [];
 
-    let result = giveKingHighlightIds(id);
-    result = Object.values(result).flat();
-    result = result.filter(element => {
-        if (checkPieceOfOpponentOnElementNoDom(element, color)) {
-            return true;
-        }
+    let squares = giveKingHighlightIds(id);
+    let result = Object.values(squares).flat();
+
+    return result.filter(squareId => {
+        const square = state.flat().find(s => s.id === squareId);
+        return square?.piece && square.piece.color !== color;
     });
-
-    return result;
 }
 
 //функция для подсветки ходов коня
-function giveKnightCaptureIds(id, color) {
-    if (!id) {
-        return [];
-    }
+function giveKnightCaptureIds(id, color, state = globalState) {
+    if (!id) return [];
 
-    let returnArr = giveKnightHighlightIds(id);
+    const highlightIds = giveKnightHighlightIds(id);
 
-    returnArr = returnArr.filter(element =>
-        checkPieceOfOpponentOnElementNoDom(element, color)
-    );
-
-    return returnArr;
+    return highlightIds.filter(squareId => {
+        const square = state.flat().find(s => s.id === squareId);
+        return square?.piece && square.piece.color !== color;
+    });
 }
 
 //функция для шаха с пешками
-function givePawnCaptureIds(id, color) {
+function givePawnCaptureIds(id, color, state = globalState) {
     if (!id) return [];
 
-    const alpha = id[0];
-    const num = parseInt(id[1]);
+    const file = id[0];
+    const rank = parseInt(id[1]);
+
+    const direction = color === "white" ? 1 : -1;
+    const nextRank = rank + direction;
+    if (nextRank < 1 || nextRank > 8) return [];
 
     const captures = [];
 
-    const direction = color === "white" ? 1 : -1;
-    const nextRank = num + direction;
+    const leftFile = String.fromCharCode(file.charCodeAt(0) - 1);
+    const rightFile = String.fromCharCode(file.charCodeAt(0) + 1);
 
-    if (nextRank < 1 || nextRank > 8) return [];
+    const possibleCaptures = [
+        `${leftFile}${nextRank}`,
+        `${rightFile}${nextRank}`,
+    ];
 
-    const leftFile = String.fromCharCode(alpha.charCodeAt(0) - 1);
-    const rightFile = String.fromCharCode(alpha.charCodeAt(0) + 1);
-
-    if (leftFile >= "a" && leftFile <= "h") {
-        const leftCapture = `${leftFile}${nextRank}`;
-        if (checkPieceOfOpponentOnElementNoDom(leftCapture, color)) {
-            captures.push(leftCapture);
-        }
-    }
-
-    if (rightFile >= "a" && rightFile <= "h") {
-        const rightCapture = `${rightFile}${nextRank}`;
-        if (checkPieceOfOpponentOnElementNoDom(rightCapture, color)) {
-            captures.push(rightCapture);
+    for (const squareId of possibleCaptures) {
+        const square = state.flat().find(s => s.id === squareId);
+        if (square?.piece && square.piece.color !== color) {
+            captures.push(squareId);
         }
     }
 
@@ -581,13 +548,12 @@ function givePawnCaptureIds(id, color) {
 }
 
 //реализация шаха
-function getAttackedSquares(color) {
-    const opponentColor = color === "white" ? "black" : "white";
+function getAttackedSquares(color, state = globalState) {
     const attacked = [];
 
-    const allPieces = globalState
+    const allPieces = state
         .flat()
-        .filter(square => square.piece && square.piece.color === opponentColor);
+        .filter(square => square.piece && square.piece.color === color); // ✅ не opponentColor!
 
     allPieces.forEach(square => {
         const { piece } = square;
@@ -595,29 +561,29 @@ function getAttackedSquares(color) {
 
         switch (piece.piece_name.toLowerCase()) {
             case "bishop":
-                captureIds = giveBishopCaptureIds(square.id, opponentColor);
+                captureIds = giveBishopCaptureIds(square.id, color, state);
                 break;
             case "rook":
-                captureIds = giveRookCaptureIds(square.id, opponentColor);
+                captureIds = giveRookCaptureIds(square.id, color, state);
                 break;
             case "queen":
-                captureIds = giveQueenCaptureIds(square.id, opponentColor);
+                captureIds = giveQueenCaptureIds(square.id, color, state);
                 break;
             case "king":
-                captureIds = giveKingCaptureIds(square.id, opponentColor);
+                captureIds = giveKingCaptureIds(square.id, color, state);
                 break;
             case "knight":
-                captureIds = giveKnightCaptureIds(square.id, opponentColor);
+                captureIds = giveKnightCaptureIds(square.id, color, state);
                 break;
             case "pawn":
-                captureIds = givePawnCaptureIds(square.id, opponentColor); // <-- ВОТ ЗДЕСЬ
+                captureIds = givePawnCaptureIds(square.id, color, state);
                 break;
         }
 
         attacked.push(...captureIds);
     });
 
-    return attacked;
+    return [...new Set(attacked)];
 }
 
 export {

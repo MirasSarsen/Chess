@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тренеры | Шахматная Академия</title>
+    <title data-i18n="trainers.title">Тренеры | Шахматная Академия</title>
     <link rel="stylesheet" href="../Styles/styles.css">
     <link rel="stylesheet" href="../Styles/responsive.css">
     <link rel="stylesheet" href="../students/styles/styles.css">
@@ -12,63 +12,71 @@
 </head>
 
 <body>
-    <header>
-        <div class="header-container">
-            <a href="/"><img src="/logo.png" alt="логотип" class="logo"></a>
-            <div class="burger" id="burger">☰</div>
-        </div>
-        <nav class="navbar" id="navbar">
-            <a href="/students">Ученики</a>
-            <a href="/trainers">Тренеры</a>
-            <a href="/schedule">Расписание</a>
-            <a href="/tournaments">Турниры</a>
-            <a href="/online-game">Одиночная-игра</a>
-        </nav>
-    </header>
-
-    <main>
-        <section class="hero">
-            <h1>Наши тренеры</h1>
-            <p>Профессиональные наставники с богатым опытом и знаниями.</p>
-        </section>
-
-        <section class="students-list">
-            <div class="student-card">
-                <img src="/images/trainer1.png" alt="Тренер 1">
-                <h3>Гроссмейстер Гросс Гроссович</h3>
-                <p>20 лет опыта, воспитатель чемпионов Казахстана.</p>
+    <div class="container">
+        <header>
+            <div class="header-container">
+                <a href="/"><img src="/logo.png" alt="логотип" class="logo"></a>
+                <div class="burger" id="burger">☰</div>
             </div>
-            <div class="student-card">
-                <img src="/images/trainer2.png" alt="Тренер 2">
-                <h3>Стратегия Сильная Позиция</h3>
-                <p>Эксперт по обучению детей и подростков.</p>
-            </div>
-        </section>
-    </main>
+            <nav class="navbar" id="navbar">
+                <select id="langSelect">
+                    <option value="ru">RU</option>
+                    <option value="kz">KZ</option>
+                </select>
+                <a href="/students" data-i18n="nav.students">Ученики</a>
+                <a href="/trainers" data-i18n="nav.trainers">Тренеры</a>
+                <a href="/schedule" data-i18n="nav.schedule">Расписание</a>
+                <a href="/tournaments" data-i18n="nav.tournaments">Турниры</a>
+                <a href="/online-game" data-i18n="nav.singleGame">Одиночная-игра</a>
+            </nav>
+        </header>
 
-    <footer>
-        <div class="footer-column">
-            <h3>О НАС</h3>
-            <p>Шахматная Академия – место, где рождаются чемпионы!</p>
-            <div class="footer-social">
-                <a href="https://api.whatsapp.com/send/?phone=77711988820"><img src="/icons/whatsapp.png"
-                        alt="WhatsApp"></a>
-                <a href="https://www.instagram.com/chess.akadem/"><img src="/icons/instagram.png" class="instagram"
-                        alt="Instagram"></a>
-                <a href="https://t.me/chessacadempvl"><img src="/icons/telegram.png" alt="Telegram"></a>
+        <main>
+            <section class="hero">
+                <h1 data-i18n="trainers.heading">Наши тренеры</h1>
+                <p data-i18n="trainers.subheading">Профессиональные наставники с богатым опытом и знаниями.</p>
+            </section>
+
+            <section class="students-list">
+                <div class="student-card">
+                    <img src="/images/trainer1.png" alt="Тренер 1">
+                    <h3 data-i18n="trainers.name1">Гроссмейстер Гросс Гроссович</h3>
+                    <p data-i18n="trainers.desc1">20 лет опыта, воспитатель чемпионов Казахстана.</p>
+                </div>
+                <div class="student-card">
+                    <img src="/images/trainer2.png" alt="Тренер 2">
+                    <h3 data-i18n="trainers.name2">Стратегия Сильная Позиция</h3>
+                    <p data-i18n="trainers.desc2">Эксперт по обучению детей и подростков.</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="footer-column">
+                <h3 data-i18n="footer.aboutTitle">О НАС</h3>
+                <p data-i18n="footer.aboutText">Шахматная Академия – место, где рождаются чемпионы!</p>
+                <div class="footer-social">
+                    <a href="https://api.whatsapp.com/send/?phone=77711988820"><img src="/icons/whatsapp.png"
+                            alt="WhatsApp"></a>
+                    <a href="https://www.instagram.com/chess.akadem/"><img src="/icons/instagram.png" class="instagram"
+                            alt="Instagram"></a>
+                    <a href="https://t.me/chessacadempvl"><img src="/icons/telegram.png" alt="Telegram"></a>
+                </div>
             </div>
-        </div>
-        <div class="footer-column">
-            <h3>ПОДДЕРЖКА</h3>
-            <a href="https://api.whatsapp.com/send/?phone=77711988820">Связаться с нами</a>
-            <a href="https://api.whatsapp.com/send/?phone=77772947769">Техническая помощь</a>
-        </div>
-        <div class="footer-column">
-            <h3>КОНТАКТЫ</h3>
-            <p>Email: info@chessacademy.com</p>
-            <p>Телефон: +7 771 198 8820</p>
-        </div>
-    </footer>
+            <div class="footer-column">
+                <h3 data-i18n="footer.supportTitle">ПОДДЕРЖКА</h3>
+                <a href="https://api.whatsapp.com/send/?phone=77711988820" data-i18n="footer.contactUs">Связаться с
+                    нами</a>
+                <a href="https://api.whatsapp.com/send/?phone=77772947769" data-i18n="footer.techHelp">Техническая
+                    помощь</a>
+            </div>
+            <div class="footer-column">
+                <h3 data-i18n="footer.contactsTitle">КОНТАКТЫ</h3>
+                <p>Email: info@chessacademy.com</p>
+                <p data-i18n="footer.phone">Телефон: +7 771 198 8820</p>
+            </div>
+        </footer>
+    </div>
 
     <script>
         const burger = document.getElementById('burger');
@@ -76,6 +84,10 @@
         burger.addEventListener('click', () => {
             navbar.classList.toggle('active');
         });
+    </script>
+    <script src="../i18n.js"></script>
+    <script>
+        initI18n(); 
     </script>
 </body>
 

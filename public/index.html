@@ -11,91 +11,100 @@
 </head>
 
 <body>
-
-    <header>
-        <div class="header-container">
-            <a href="#">
-                <img src="logo.png" alt="логотип" class="logo">
-            </a>
-            <div class="burger" id="burger">
-                ☰
+    <div class="container">
+        <header>
+            <div class="header-container">
+                <a href="#">
+                    <img src="logo.png" alt="логотип" class="logo">
+                </a>
+                <div class="burger" id="burger">
+                    ☰
+                </div>
             </div>
-        </div>
-        <nav class="navbar" id="navbar">
-            <a href="/students">Ученики</a>
-            <a href="/trainers">Тренеры</a>
-            <a href="/schedule">Расписание</a>
-            <a href="/tournaments">Турниры</a>
-            <a href="/online-game">Одиночная-игра</a>
-        </nav>
-    </header>
+            <nav class="navbar" id="navbar">
+                <select id="langSelect">
+                    <option value="ru">RU</option>
+                    <option value="kz">KZ</option>
+                </select>
+                <a href="/students" data-i18n="nav.students">Ученики</a>
+                <a href="/trainers" data-i18n="nav.trainers">Тренеры</a>
+                <a href="/schedule" data-i18n="nav.schedule">Расписание</a>
+                <a href="/tournaments" data-i18n="nav.tournaments">Турниры</a>
+                <a href="/online-game" data-i18n="nav.singleGame">Одиночная-игра</a>
+            </nav>
+        </header>
 
-    <main>
-        <section class="hero">
-            <h1>Добро пожаловать в Шахматную Академию</h1>
-            <p>Обучение, турниры и одиночная-игра – всё в одном месте</p>
-            <a href="/online-game" class="button">Начать игру</a>
-        </section>
+        <main>
+            <section class="hero">
+                <h1 data-i18n="main.title">Добро пожаловать в Шахматную Академию</h1>
+                <p data-i18n="main.subtitle">Обучение, турниры и одиночная-игра – всё в одном месте</p>
+                <a href="/online-game" class="button" data-i18n="main.startGame">Начать игру</a>
+            </section>
 
-        <section class="features">
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSeQW_xH-guBfeHy5NtbYjW9QgqNhmtlGAaXFctQTzrM726juQ/viewform?usp=dialog"
-                class="feature-link">
-                <div class="feature">
-                    <img src="images/learning.png" alt="Тренировки">
-                    <h3>Обучение</h3>
-                    <p>Изучайте стратегию и тактику с профессиональными тренерами.</p>
-                </div>
-            </a>
-            <a href="/online-game" class="feature-link">
-                <div class="feature">
-                    <img src="images/online-game.png" alt="Шахматы">
-                    <h3>Одиночная игра</h3>
-                    <p>Тренируйтесь и оттачивайте навыки в шахматах в одиночку.</p>
-                </div>
-            </a>
-            <a href="/tournaments" class="feature-link">
-                <div class="feature">
-                    <img src="images/tournament.png" alt="Турниры">
-                    <h3>Турниры</h3>
-                    <p>Участвуйте в турнирах и повышайте свой рейтинг!</p>
-                </div>
-            </a>
-        </section>
-    </main>
+            <section class="features">
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSeQW_xH-guBfeHy5NtbYjW9QgqNhmtlGAaXFctQTzrM726juQ/viewform?usp=dialog"
+                    class="feature-link">
+                    <div class="feature">
+                        <img src="images/learning.png" alt="Тренировки">
+                        <h3 data-i18n="main.feature1.title">Обучение</h3>
+                        <p data-i18n="main.feature1.desc">Изучайте стратегию и тактику с профессиональными тренерами</p>
+                    </div>
+                </a>
+                <a href="/online-game" class="feature-link">
+                    <div class="feature">
+                        <img src="images/online-game.png" alt="Шахматы">
+                        <h3 data-i18n="main.feature2.title">Одиночная игра</h3>
+                        <p data-i18n="main.feature2.desc">Тренируйтесь и оттачивайте навыки в шахматах в одиночку.</p>
+                    </div>
+                </a>
+                <a href="/tournaments" class="feature-link">
+                    <div class="feature">
+                        <img src="images/tournament.png" alt="Турниры">
+                        <h3 data-i18n="main.feature3.title">Турниры</h3>
+                        <p data-i18n="main.feature3.desc">Участвуйте в турнирах и повышайте свой рейтинг!</p>
+                    </div>
+                </a>
+            </section>
+        </main>
 
-    <footer>
-        <div class="footer-column">
-            <h3>О НАС</h3>
-            <p>Шахматная Академия – место, где рождаются чемпионы!</p>
-            <div class="footer-social">
-                <a href="https://api.whatsapp.com/send/?phone=77711988820"><img src="icons/whatsapp.png"
-                        alt="WhatsApp"></a>
-                <a href="https://www.instagram.com/chess.akadem/"><img src="icons/instagram.png" class="instagram"
-                        alt="Instagram"></a>
-                <a href="https://t.me/chessacadempvl"><img src="icons/telegram.png" alt="Telegram"></a>
+        <footer>
+            <div class="footer-column">
+                <h3 data-i18n="footer.aboutTitle">О НАС</h3>
+                <p data-i18n="footer.aboutDesc">Шахматная Академия – место, где рождаются чемпионы!</p>
+                <div class="footer-social">
+                    <a href="https://api.whatsapp.com/send/?phone=77711988820"><img src="icons/whatsapp.png"
+                            alt="WhatsApp"></a>
+                    <a href="https://www.instagram.com/chess.akadem/"><img src="icons/instagram.png" class="instagram"
+                            alt="Instagram"></a>
+                    <a href="https://t.me/chessacadempvl"><img src="icons/telegram.png" alt="Telegram"></a>
+                </div>
             </div>
-        </div>
-        <div class="footer-column">
-            <h3>ПОДДЕРЖКА</h3>
-            <a href="https://api.whatsapp.com/send/?phone=77711988820">Связаться с нами</a>
-            <a href="https://api.whatsapp.com/send/?phone=77772947769">Техническая помощь</a>
-        </div>
-        <div class="footer-column">
-            <h3>КОНТАКТЫ</h3>
-            <p>Email: info@chessacademy.com</p>
-            <p>Телефон: +7 771 198 8820</p>
-        </div>
-    </footer>
-
+            <div class="footer-column">
+                <h3 data-i18n="footer.supportTitle">ПОДДЕРЖКА</h3>
+                <a href="https://api.whatsapp.com/send/?phone=77711988820" data-i18n="footer.contactUs">Связаться с
+                    нами</a>
+                <a href="https://api.whatsapp.com/send/?phone=77772947769" data-i18n="footer.techSupport">Техническая
+                    помощь</a>
+            </div>
+            <div class="footer-column">
+                <h3 data-i18n="footer.contactsTitle">КОНТАКТЫ</h3>
+                <p>Email: info@chessacademy.com</p>
+                <p data-i18n="footer.phone">Телефон: +7 771 198 8820</p>
+            </div>
+        </footer>
+    </div>
 </body>
 
 <script>
     const burger = document.getElementById('burger');
     const navbar = document.getElementById('navbar');
-
     burger.addEventListener('click', () => {
         navbar.classList.toggle('active');
     });
+</script>
+<script src="../i18n.js"></script>
+<script>
+    initI18n(); 
 </script>
 
 </html>

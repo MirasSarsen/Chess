@@ -16,11 +16,15 @@
             <div class="burger" id="burger">☰</div>
         </div>
         <nav class="navbar" id="navbar">
-            <a href="/students">Ученики</a>
-            <a href="/trainers">Тренеры</a>
-            <a href="/schedule">Расписание</a>
-            <a href="/tournaments">Турниры</a>
-            <a href="/online-game">Одиночная-игра</a>
+            <select id="langSelect">
+                <option value="ru">RU</option>
+                <option value="kz">KZ</option>
+            </select>
+            <a href="/students" data-i18n="nav.students">Ученики</a>
+            <a href="/trainers" data-i18n="nav.trainers">Тренеры</a>
+            <a href="/schedule" data-i18n="nav.schedule">Расписание</a>
+            <a href="/tournaments" data-i18n="nav.tournaments">Турниры</a>
+            <a href="/online-game" data-i18n="nav.singleGame">Одиночная-игра</a>
         </nav>
     </header>
     <div id="root"></div>
@@ -29,5 +33,16 @@
     </div>
 </body>
 <script type="module" src="./index.js"></script>
+<script>
+    const burger = document.getElementById('burger');
+    const navbar = document.getElementById('navbar');
+    burger.addEventListener('click', () => {
+        navbar.classList.toggle('active');
+    });
+</script>
+<script src="../i18n.js"></script>
+<script>
+    initI18n(); 
+</script>
 
 </html>

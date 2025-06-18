@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ученики | Шахматная Академия</title>
+    <title data-i18n="students.title">Ученики | Шахматная Академия</title>
     <link rel="stylesheet" href="../Styles/styles.css">
     <link rel="stylesheet" href="styles/styles.css">
     <link rel="stylesheet" href="../Styles/responsive.css">
@@ -12,82 +12,90 @@
 </head>
 
 <body>
-    <header>
-        <div class="header-container">
-            <a href="/">
-                <img src="/logo.png" alt="логотип" class="logo">
-            </a>
-            <div class="burger" id="burger">
-                ☰
+    <div class="container">
+        <header>
+            <div class="header-container">
+                <a href="/">
+                    <img src="/logo.png" alt="логотип" class="logo">
+                </a>
+                <div class="burger" id="burger">☰</div>
             </div>
-        </div>
-        <nav class="navbar" id="navbar">
-            <a href="/students">Ученики</a>
-            <a href="/trainers">Тренеры</a>
-            <a href="/schedule">Расписание</a>
-            <a href="/tournaments">Турниры</a>
-            <a href="/online-game">Одиночная-игра</a>
-        </nav>
-    </header>
+            <nav class="navbar" id="navbar">
+                <select id="langSelect">
+                    <option value="ru">RU</option>
+                    <option value="kz">KZ</option>
+                </select>
+                <a href="/students" data-i18n="nav.students">Ученики</a>
+                <a href="/trainers" data-i18n="nav.trainers">Тренеры</a>
+                <a href="/schedule" data-i18n="nav.schedule">Расписание</a>
+                <a href="/tournaments" data-i18n="nav.tournaments">Турниры</a>
+                <a href="/online-game" data-i18n="nav.singleGame">Одиночная-игра</a>
+            </nav>
+        </header>
 
-    <main>
-        <section class="hero">
-            <h1>Наши ученики</h1>
-            <p>Знакомьтесь с талантливыми шахматистами нашей академии!</p>
-        </section>
+        <main>
+            <section class="hero">
+                <h1 data-i18n="students.heading">Наши ученики</h1>
+                <p data-i18n="students.subheading">Знакомьтесь с талантливыми шахматистами нашей академии!</p>
+            </section>
 
-        <section class="students-list">
-            <div class="student-card">
-                <img src="/images/student1.png" alt="Ученик 1">
-                <h3>Тестов Тест Тестович</h3>
-                <p>Кандидат в мастера спорта. Победитель городских турниров.</p>
-            </div>
-            <div class="student-card">
-                <img src="/images/student2.png" alt="Ученик 2">
-                <h3>Демонстрация Демо Демовна</h3>
-                <p>Призёр региональных чемпионатов по шахматам.</p>
-            </div>
-            <div class="student-card">
-                <img src="/images/student3.png" alt="Ученик 3">
-                <h3>Проверкин Чек Чекович</h3>
-                <p>Лучший новичок года в Шахматной Академии.</p>
-            </div>
-        </section>
-    </main>
+            <section class="students-list">
+                <div class="student-card">
+                    <img src="/images/student1.png" alt="Ученик 1">
+                    <h3 data-i18n="students.name1">Тестов Тест Тестович</h3>
+                    <p data-i18n="students.desc1">Кандидат в мастера спорта. Победитель городских турниров.</p>
+                </div>
+                <div class="student-card">
+                    <img src="/images/student2.png" alt="Ученик 2">
+                    <h3 data-i18n="students.name2">Демонстрация Демо Демовна</h3>
+                    <p data-i18n="students.desc2">Призёр региональных чемпионатов по шахматам.</p>
+                </div>
+                <div class="student-card">
+                    <img src="/images/student3.png" alt="Ученик 3">
+                    <h3 data-i18n="students.name3">Проверкин Чек Чекович</h3>
+                    <p data-i18n="students.desc3">Лучший новичок года в Шахматной Академии.</p>
+                </div>
+            </section>
+        </main>
 
-    <footer>
-        <div class="footer-column">
-            <h3>О НАС</h3>
-            <p>Шахматная Академия – место, где рождаются чемпионы!</p>
-            <div class="footer-social">
-                <a href="https://api.whatsapp.com/send/?phone=77711988820"><img src="/icons/whatsapp.png"
-                        alt="WhatsApp"></a>
-                <a href="https://www.instagram.com/chess.akadem/"><img src="/icons/instagram.png" class="instagram"
-                        alt="Instagram"></a>
-                <a href="https://t.me/chessacadempvl"><img src="/icons/telegram.png" alt="Telegram"></a>
-            </div>
-        </div>
-        <div class="footer-column">
-            <h3>ПОДДЕРЖКА</h3>
-            <a href="https://api.whatsapp.com/send/?phone=77711988820">Связаться с нами</a>
-            <a href="https://api.whatsapp.com/send/?phone=77772947769">Техническая помощь</a>
-        </div>
-        <div class="footer-column">
-            <h3>КОНТАКТЫ</h3>
-            <p>Email: info@chessacademy.com</p>
-            <p>Телефон: +7 771 198 8820</p>
-        </div>
-    </footer>
 
+        <footer>
+            <div class="footer-column">
+                <h3 data-i18n="footer.aboutTitle">О НАС</h3>
+                <p data-i18n="footer.aboutText">Шахматная Академия – место, где рождаются чемпионы!</p>
+                <div class="footer-social">
+                    <a href="https://api.whatsapp.com/send/?phone=77711988820"><img src="/icons/whatsapp.png"
+                            alt="WhatsApp"></a>
+                    <a href="https://www.instagram.com/chess.akadem/"><img src="/icons/instagram.png" class="instagram"
+                            alt="Instagram"></a>
+                    <a href="https://t.me/chessacadempvl"><img src="/icons/telegram.png" alt="Telegram"></a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h3 data-i18n="footer.supportTitle">ПОДДЕРЖКА</h3>
+                <a href="https://api.whatsapp.com/send/?phone=77711988820" data-i18n="footer.contactUs">Связаться с
+                    нами</a>
+                <a href="https://api.whatsapp.com/send/?phone=77772947769" data-i18n="footer.techHelp">Техническая
+                    помощь</a>
+            </div>
+            <div class="footer-column">
+                <h3 data-i18n="footer.contactsTitle">КОНТАКТЫ</h3>
+                <p>Email: info@chessacademy.com</p>
+                <p data-i18n="footer.phone">Телефон: +7 771 198 8820</p>
+            </div>
+        </footer>
+    </div>
     <script>
         const burger = document.getElementById('burger');
         const navbar = document.getElementById('navbar');
-
         burger.addEventListener('click', () => {
             navbar.classList.toggle('active');
         });
     </script>
-
+    <script src="../i18n.js"></script>
+    <script>
+        initI18n(); 
+    </script>
 </body>
 
 </html>

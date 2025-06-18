@@ -5,10 +5,13 @@ import {
     clearHightlight,
     selfHighlight,
     globalPiece,
-    checkCheckmateStatus,
 } from "../Render/main.js";
 import { isInCheck } from "../Helper/checkmateHelper.js";
-import { isCheckmate, showCheckIfKing } from "../Helper/checkmateHelper.js";
+import {
+    isCheckmate,
+    showCheckIfKing,
+    checkGameEnd,
+} from "../Helper/checkmateHelper.js";
 import {
     checkPieceOfOpponentOnElement,
     checkSquareCaptureId,
@@ -16,19 +19,12 @@ import {
     checkWeatherPieceExistsOrNot,
     giveRookHighlightIds,
     giveKnightHighlightIds,
-    giveQueenHighlightIds,
     giveKingHighlightIds,
-    giveKingCaptureIds,
-    giveKnightCaptureIds,
-    giveBishopCaptureIds,
-    giveRookCaptureIds,
-    giveQueenCaptureIds,
     getAttackedSquares,
 } from "../Helper/commonHelper.js";
 // import logMoves from "../Helper/logging.js";
 import pawnPromotion from "../Helper/modalCreator.js";
 
-//подсветить или нет (стейт)
 let hightlight_state = false;
 let inTurn = "white";
 let whoInCheck = null;
@@ -47,21 +43,18 @@ function captureInTurn(square) {
     }
 
     if (square.captureHighlight) {
-        // фигура хавает других
         moveElement(selfHighlightState, piece.current_position);
         clearPreviousSelfHighlight(selfHighlightState);
         clearHighlightLocal();
         return;
     }
-
-    return;
 }
 
 function checkForPawnPromotion(piece, id) {
-    if (!piece?.piece_name) return false; // Если фигура undefined или не имеет имени
+    if (!piece?.piece_name) return false;
 
     if (piece.piece_name.toLowerCase().includes("pawn")) {
-        const row = id[id.length - 1]; // Последняя цифра в id (номер строки)
+        const row = id[id.length - 1];
         if (
             (inTurn === "white" && row === "8") ||
             (inTurn === "black" && row === "1")
@@ -77,6 +70,7 @@ function callbackPawnPromotion(piece, id) {
     const currentSquare = keySquareMapper[id];
     piece.current_position = id;
     currentSquare.piece = realPiece;
+
     const image = document.createElement("img");
     image.src = realPiece.img;
     image.classList.add("piece");
@@ -85,31 +79,53 @@ function callbackPawnPromotion(piece, id) {
     currentElement.innerHTML = "";
     currentElement.append(image);
 }
-
-//динамическое передвижение фигур благодаря айдишникам
 function moveElement(piece, id, internalMove = false) {
     if (!internalMove) {
-        const clonedState = JSON.parse(JSON.stringify(globalState));
-        const fromId = piece.current_position;
-        const toId = id;
+        if (!piece || !keySquareMapper[id]) return;
 
-        // Имитация хода
-        const from = clonedState.flat().find(el => el.id === fromId);
-        const to = clonedState.flat().find(el => el.id === toId);
+        const targetSquare = keySquareMapper[id];
+        const movingColor = piece.piece_name.startsWith("white")
+            ? "white"
+            : "black";
+
+        const targetColor = targetSquare?.piece?.piece_name?.startsWith("white")
+            ? "white"
+            : "black";
+
+        if (targetSquare?.piece && movingColor === targetColor) return;
+
+        // Создаём клон состояния с сохранением color
+        const clonedState = globalState.map(row =>
+            row.map(cell => ({
+                id: cell.id,
+                piece: cell.piece ? { ...cell.piece } : null,
+                color: cell.color,
+            }))
+        );
+        console.log(
+            "Атакуемые клетки",
+            movingColor,
+            getAttackedSquares(movingColor, clonedState)
+        );
+
+        const from = clonedState
+            .flat()
+            .find(el => el.id === piece.current_position);
+        const to = clonedState.flat().find(el => el.id === id);
+
         to.piece = from.piece;
         from.piece = null;
 
-        const ourColor = piece.piece_name.includes("white") ? "white" : "black";
-        const opponentColor = ourColor === "white" ? "black" : "white";
-
+        // Проверка, попадёт ли король под шах
         const kingSquare = clonedState
             .flat()
-            .find(square => square.piece?.piece_name === `${ourColor}_king`);
+            .find(sq => sq.piece?.piece_name === `${movingColor}_king`);
 
-        if (!kingSquare) {
-            console.error("Не найден король для цвета:", ourColor);
-        } else {
-            const attacked = getAttackedSquares(opponentColor, clonedState);
+        if (kingSquare) {
+            const attacked = getAttackedSquares(
+                movingColor === "white" ? "black" : "white",
+                clonedState
+            );
             if (attacked.includes(kingSquare.id)) {
                 console.log("Ход невозможен: король будет под шахом");
                 return;
@@ -117,51 +133,28 @@ function moveElement(piece, id, internalMove = false) {
         }
     }
 
-    // после showCheckIfKing(piece, id, keySquareMapper);
-    const opponent = inTurn; // ещё до изменения inTurn
-    const nextPlayer = opponent === "white" ? "black" : "white";
-    if (isInCheck(nextPlayer)) {
-        // подсветить шах
-        const kingSquareId = globalPiece[`${nextPlayer}_king`].current_position;
-        document.getElementById(kingSquareId).classList.add("checkHighlight");
-        showCheckAlert(); // опционально, чтобы ещё и алерт выскочил
-    }
-
     const shouldPromote = checkForPawnPromotion(piece, id);
+    const targetPiece = keySquareMapper[id]?.piece;
 
-    const targetPiece = globalState.flat().find(el => el.id === id)?.piece;
-    if (targetPiece && targetPiece.piece_name.includes("king")) {
-        console.error("НЕЛЬЗЯ съесть короля!");
-        return;
-    }
-
-    const isKing = piece.piece_name.includes("king");
-    const isRook = piece.piece_name.includes("rook");
+    // Запрет на поедание короля
+    if (targetPiece?.piece_name.includes("king")) return;
 
     // Рокировка
-    if (isKing && piece.piece_name.includes("white")) {
-        if (id === "c1") {
-            const rook = keySquareMapper["a1"].piece;
-            moveElement(rook, "d1", true);
-        }
-        if (id === "g1") {
-            const rook = keySquareMapper["h1"].piece;
-            moveElement(rook, "f1", true);
-        }
-    }
-
-    if (isKing && piece.piece_name.includes("black")) {
-        if (id === "c8") {
-            const rook = keySquareMapper["a8"].piece;
-            moveElement(rook, "d8", true);
-        }
-        if (id === "g8") {
-            const rook = keySquareMapper["h8"].piece;
-            moveElement(rook, "f8", true);
+    if (piece.piece_name.includes("king")) {
+        if (piece.piece_name.includes("white")) {
+            if (id === "c1")
+                moveElement(keySquareMapper["a1"].piece, "d1", true);
+            if (id === "g1")
+                moveElement(keySquareMapper["h1"].piece, "f1", true);
+        } else {
+            if (id === "c8")
+                moveElement(keySquareMapper["a8"].piece, "d8", true);
+            if (id === "g8")
+                moveElement(keySquareMapper["h8"].piece, "f8", true);
         }
     }
 
-    // Обновление позиции
+    // Обновление глобального состояния
     globalState.flat().forEach(el => {
         if (el.id === piece.current_position) delete el.piece;
         if (el.id === id) el.piece = piece;
@@ -181,26 +174,41 @@ function moveElement(piece, id, internalMove = false) {
 
     piece.current_position = id;
     piece.move = true;
-
     clearHightlight();
 
     if (shouldPromote) {
         pawnPromotion(inTurn, callbackPawnPromotion, id);
     }
 
-    showCheckIfKing(piece, id, keySquareMapper);
-
-    // Проверка шаха и мата после хода
-    const nextTurn = inTurn === "white" ? "black" : "white";
-    if (isInCheck(nextTurn)) {
-        console.log(`Шах ${nextTurn} королю!`);
-        if (isCheckmate(nextTurn)) {
-            console.log(`Мат! Победил ${inTurn}.`);
-        }
-    }
-
     if (!internalMove) {
         changeTurn();
+        const nextPlayerColor = inTurn;
+
+        if (isCheckmate(nextPlayerColor)) {
+            alert("Мат " + nextPlayerColor + " — игра окончена.");
+            return;
+        }
+
+        checkGameEnd(nextPlayerColor);
+    }
+
+    // Подсветка шаха
+    const enemyColor = piece.piece_name.startsWith("white") ? "black" : "white";
+    const enemyKingSquare = globalState
+        .flat()
+        .find(sq => sq.piece?.piece_name === `${enemyColor}_king`);
+
+    if (enemyKingSquare) {
+        const attackedNow = getAttackedSquares(
+            inTurn === "white" ? "black" : "white",
+            globalState
+        );
+        if (attackedNow.includes(enemyKingSquare.id)) {
+            console.log("Шах!");
+            document
+                .getElementById(enemyKingSquare.id)
+                ?.classList.add("highlightRed");
+        }
     }
 }
 
@@ -378,6 +386,9 @@ let moveState = null;
 function clearHighlightLocal() {
     clearHightlight();
     hightlight_state = false;
+    document.querySelectorAll(".checkHighlight").forEach(el => {
+        el.classList.remove("checkHighlight");
+    });
 }
 
 //передвижение фигуры относительно х-доски и у-доски
@@ -1000,19 +1011,22 @@ function GlobalEvent() {
                 childElementsOfclickedEl.length == 1 ||
                 event.target.localName == "span"
             ) {
-                if (event.target.localName == "span") {
-                    clearPreviousSelfHighlight(selfHighlightState);
-                    const id = event.target.parentNode.id;
+                clearPreviousSelfHighlight(selfHighlightState);
+
+                const id =
+                    event.target.localName == "span"
+                        ? event.target.parentNode.id
+                        : event.target.id;
+
+                if (moveState) {
                     moveElement(moveState, id);
-                    moveState = null;
                 } else {
-                    clearPreviousSelfHighlight(selfHighlightState);
-                    const id = event.target.id;
-                    moveElement(moveState, id);
-                    moveState = null;
+                    console.warn("Попытка хода без выбранной фигуры");
                 }
+
+                moveState = null;
             } else {
-                //очистка подсветки
+                // очистка подсветки
                 clearHighlightLocal();
                 clearPreviousSelfHighlight(selfHighlightState);
             }

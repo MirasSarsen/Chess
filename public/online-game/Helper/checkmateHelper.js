@@ -237,4 +237,67 @@ function showCheckAlert() {
     setTimeout(() => alert.remove(), 2000); // исчезает через 2 секунды
 }
 
-export { isInCheck, showCheckAlert, showCheckIfKing };
+function showCheckmateAlert(winnerColor) {
+    const alert = document.createElement("div");
+    alert.innerText = `Мат! Победа: ${
+        winnerColor === "white" ? "Белых" : "Чёрных"
+    }!`;
+    alert.className = "checkmate-alert";
+
+    Object.assign(alert.style, {
+        position: "absolute",
+        top: "10px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        backgroundColor: "#222",
+        color: "#fff",
+        padding: "12px 24px",
+        borderRadius: "8px",
+        fontSize: "20px",
+        zIndex: "9999",
+        boxShadow: "0 0 12px rgba(0,0,0,0.7)",
+    });
+
+    document.body.appendChild(alert);
+
+    setTimeout(() => alert.remove(), 5000);
+}
+
+function disableAllInteraction() {
+    document.querySelectorAll(".cell").forEach(cell => {
+        cell.style.pointerEvents = "none";
+    });
+}
+
+let whoInCheck = null;
+
+export function checkGameEnd(currentTurn) {
+    const isCheck = isInCheck(currentTurn);
+
+    if (isCheck) {
+        if (whoInCheck !== currentTurn) {
+            const kingId = globalPiece[`${currentTurn}_king`]?.current_position;
+            if (kingId) highlightKingSquare(kingId);
+            showCheckAlert();
+            whoInCheck = currentTurn;
+        }
+        if (isCheckmate(currentTurn)) {
+            const winnerColor = currentTurn === "white" ? "black" : "white";
+            showCheckmateAlert(winnerColor);
+            disableAllInteraction();
+        }
+    } else {
+        whoInCheck = null;
+        document
+            .querySelectorAll(".checkHighlight")
+            .forEach(el => el.classList.remove("checkHighlight"));
+    }
+}
+
+export {
+    isInCheck,
+    showCheckAlert,
+    showCheckIfKing,
+    showCheckmateAlert,
+    disableAllInteraction,
+};

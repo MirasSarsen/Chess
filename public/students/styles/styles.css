@@ -33,3 +33,7 @@
     font-size: 0.9rem;
     color: var(--textcolor);
 }
+
+.container {
+    margin: 0 auto;
+}
