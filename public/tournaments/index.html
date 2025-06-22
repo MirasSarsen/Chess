@@ -15,6 +15,8 @@
     <div class="container">
         <header>
             <div class="header-container">
+                <button id="themeToggle" class="button">Сменить
+                    тему</button>
                 <a href="/"><img src="/logo.png" alt="логотип" class="logo"></a>
                 <div class="burger" id="burger">☰</div>
             </div>
@@ -94,6 +96,25 @@
         </footer>
     </div>
 
+    <script>
+        const themeToggleBtn = document.getElementById('themeToggle');
+
+        function applyTheme(theme) {
+            document.body.classList.remove('light-theme', 'dark-theme');
+            document.body.classList.add(theme);
+            localStorage.setItem('theme', theme);
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = document.body.classList.contains('dark-theme') ? 'dark-theme' : 'light-theme';
+            const newTheme = currentTheme === 'dark-theme' ? 'light-theme' : 'dark-theme';
+            applyTheme(newTheme);
+        });
+
+        // Установить тему при загрузке страницы
+        const savedTheme = localStorage.getItem('theme') || 'light-theme';
+        applyTheme(savedTheme);
+    </script>
     <script>
         const burger = document.getElementById('burger');
         const navbar = document.getElementById('navbar');

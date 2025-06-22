@@ -6,50 +6,112 @@ import {
     giveRookCaptureIds,
     giveQueenCaptureIds,
     checkWeatherPieceExistsOrNot,
+    giveKnightHighlightIds,
+    giveKingHighlightIds,
+    giveBishopHighlightIds,
+    giveRookHighlightIds,
+    giveQueenHighlightIds,
+    getAttackedSquares,
 } from "./commonHelper.js";
 import { keySquareMapper } from "../index.js";
 
-function isInCheck(currentTurn) {
-    const isBlack = currentTurn === "black";
-    const ownKingPos = isBlack
-        ? globalPiece.black_king?.current_position
-        : globalPiece.white_king?.current_position;
+// Pawn capture logic (только по диагонали)
+function givePawnCaptureIds(pos, color) {
+    const file = pos[0];
+    const rank = parseInt(pos[1]);
+    const direction = color === "white" ? 1 : -1;
+    const left =
+        String.fromCharCode(file.charCodeAt(0) - 1) + (rank + direction);
+    const right =
+        String.fromCharCode(file.charCodeAt(0) + 1) + (rank + direction);
 
-    if (!ownKingPos) {
-        console.warn("Собственный король не найден на доске.");
-        return false;
-    }
+    const result = [];
 
-    const enemyPrefix = isBlack ? "white" : "black";
-
-    const attackers = [
-        globalPiece[`${enemyPrefix}_knight_1`],
-        globalPiece[`${enemyPrefix}_knight_2`],
-        globalPiece[`${enemyPrefix}_king`],
-        globalPiece[`${enemyPrefix}_bishop_1`],
-        globalPiece[`${enemyPrefix}_bishop_2`],
-        globalPiece[`${enemyPrefix}_rook_1`],
-        globalPiece[`${enemyPrefix}_rook_2`],
-        globalPiece[`${enemyPrefix}_queen`],
-    ];
-
-    const moveFuncs = {
-        knight: giveKnightCaptureIds,
-        king: giveKingCaptureIds,
-        bishop: giveBishopCaptureIds,
-        rook: giveRookCaptureIds,
-        queen: giveQueenCaptureIds,
-    };
-
-    const attackSquares = attackers.flatMap(piece => {
-        if (!piece || !piece.current_position) return [];
-        const type =
-            piece.type ||
-            (typeof piece.name === "string" ? piece.name.split("_")[1] : null);
-        return moveFuncs[type]?.(piece.current_position, enemyPrefix) || [];
+    [left, right].forEach(squareId => {
+        const square = keySquareMapper[squareId];
+        if (square?.piece && square.piece.color !== color) {
+            result.push(squareId);
+        }
     });
 
-    return attackSquares.includes(ownKingPos);
+    return result;
+}
+
+function cloneState(state) {
+    return state.map(row =>
+        row.map(cell => ({
+            ...cell,
+            piece: cell.piece ? { ...cell.piece } : null,
+        }))
+    );
+}
+
+export function filterLegalMoves(piece, candidateMoves, globalState) {
+    const legalMoves = [];
+
+    for (const targetId of candidateMoves) {
+        // создаём копию текущего состояния
+        const clonedState = cloneState(globalState);
+
+        // симулируем перемещение фигуры в клонированной версии
+        simulateMove(clonedState, piece.current_position, targetId);
+
+        // если после такого хода игрок не под шахом — ход легален
+        if (!isInCheck(piece.color, clonedState)) {
+            legalMoves.push(targetId);
+        }
+    }
+
+    return legalMoves;
+}
+
+function getEnemyAttackSquares(color) {
+    const enemyColor = color === "white" ? "black" : "white";
+    const squares = [];
+
+    const enemyPieces = Object.values(globalPiece).filter(
+        p => p.color === enemyColor && p.current_position
+    );
+
+    for (const p of enemyPieces) {
+        let moves = [];
+
+        if (p.piece_name.includes("pawn")) {
+            moves = givePawnCaptureIds(p.current_position, p.color);
+        } else if (p.getAttackedSquares) {
+            moves = p.getAttackedSquares();
+        }
+
+        squares.push(...moves);
+    }
+
+    return squares;
+}
+
+function isInCheck(color) {
+    const enemyColor = color === "white" ? "black" : "white";
+    const kingPos = globalPiece[`${color}_king`]?.current_position;
+    if (!kingPos) return false;
+
+    const attackSquares = [];
+
+    const enemyPieces = Object.values(globalPiece).filter(
+        p => p?.color === enemyColor && p?.current_position
+    );
+
+    for (const p of enemyPieces) {
+        let moves = [];
+
+        if (p.piece_name.includes("pawn")) {
+            moves = givePawnCaptureIds(p.current_position, p.color);
+        } else if (p.getAttackedSquares) {
+            moves = p.getAttackedSquares();
+        }
+
+        attackSquares.push(...moves);
+    }
+
+    return attackSquares.includes(kingPos);
 }
 
 function getAllPiecesOfColor(color) {
@@ -60,74 +122,103 @@ function getAllPiecesOfColor(color) {
 
 function getValidMoves(piece, currentTurn) {
     const pos = piece.current_position;
+    const enemyColor = currentTurn === "white" ? "black" : "white";
+
     if (!pos) return [];
+
+    let rawMoves = [];
 
     switch (piece.type) {
         case "knight":
-            return giveKnightCaptureIds(pos, currentTurn);
+            rawMoves = giveKnightHighlightIds(pos, currentTurn);
+            break;
         case "king":
-            return giveKingCaptureIds(pos, currentTurn);
+            rawMoves = [
+                ...giveKingCaptureIds(pos, currentTurn), // атакующие (например, съесть фигуру)
+                // и дополнительно клетки вокруг
+                ...[
+                    [-1, -1],
+                    [-1, 0],
+                    [-1, 1],
+                    [0, -1],
+                    [0, 1],
+                    [1, -1],
+                    [1, 0],
+                    [1, 1],
+                ]
+                    .map(([df, dr]) => {
+                        const file = String.fromCharCode(
+                            pos[0].charCodeAt(0) + df
+                        );
+                        const rank = parseInt(pos[1]) + dr;
+                        const id = `${file}${rank}`;
+                        return /^[a-h][1-8]$/.test(id) ? id : null;
+                    })
+                    .filter(Boolean),
+            ];
+            break;
         case "bishop":
-            return giveBishopCaptureIds(pos, currentTurn);
+            rawMoves = Object.values(
+                giveBishopHighlightIds(pos, currentTurn)
+            ).flat();
+            break;
         case "rook":
-            return giveRookCaptureIds(pos, currentTurn);
+            rawMoves = Object.values(
+                giveRookHighlightIds(pos, currentTurn)
+            ).flat();
+            break;
         case "queen":
-            return giveQueenCaptureIds(pos, currentTurn);
+            rawMoves = Object.values(
+                giveQueenHighlightIds(pos, currentTurn)
+            ).flat();
+            break;
         case "pawn":
-            const direction = currentTurn === "white" ? -1 : 1;
-            const x = parseInt(pos[1], 10);
-            const y = pos[0];
-            const front1 = `${y}${x + direction}`;
-            const front2 = `${y}${x + direction * 2}`;
-            const captureLeft = `${String.fromCharCode(y.charCodeAt(0) - 1)}${
-                x + direction
-            }`;
-            const captureRight = `${String.fromCharCode(y.charCodeAt(0) + 1)}${
-                x + direction
-            }`;
-
-            const moves = [];
-
-            // Ходы вперед (если клетка свободна)
-            if (!checkWeatherPieceExistsOrNot(front1)) moves.push(front1);
-            if (
-                ((currentTurn === "white" && x === 2) ||
-                    (currentTurn === "black" && x === 7)) &&
-                !checkWeatherPieceExistsOrNot(front1) &&
-                !checkWeatherPieceExistsOrNot(front2)
-            ) {
-                moves.push(front2);
-            }
-
-            function isEnemyOnSquare(squareId, ownColor) {
-                const square = keySquareMapper[squareId];
-                return square?.piece && square.piece.color !== ownColor;
-            }
-
-            // Взятия по диагонали
-            [captureLeft, captureRight].forEach(square => {
-                if (isEnemyOnSquare(square, currentTurn)) {
-                    moves.push(square);
-                }
-            });
-
-            return moves;
+            // TODO: сюда вставить обычные ходы пешки
+            rawMoves = []; // пока отключено
+            break;
         default:
-            return [];
+            rawMoves = [];
     }
+
+    // Если нет шаха — отдаем обычные ходы
+    if (!isInCheck(currentTurn)) {
+        return rawMoves;
+    }
+
+    // Но если шах — фильтруем только те ходы, которые **его снимают**
+    const legalMoves = [];
+
+    for (const move of rawMoves) {
+        const prev = simulateMove(piece, move);
+        const stillInCheck = isInCheck(currentTurn);
+        undoSimulatedMove(prev);
+
+        if (!stillInCheck) {
+            legalMoves.push(move);
+        }
+    }
+
+    return legalMoves;
 }
 
 function simulateMove(piece, targetSquare) {
+    const pieceName = Object.keys(globalPiece).find(
+        k => globalPiece[k] === piece
+    );
+    if (!pieceName) return null;
+
     const captured = Object.values(globalPiece).find(
         p => p.current_position === targetSquare && p.color !== piece.color
     );
 
     const prev = {
-        pieceName: piece.name,
+        pieceName,
         oldPosition: piece.current_position,
         capturedPiece: captured
             ? {
-                  name: captured.name,
+                  pieceKey: Object.keys(globalPiece).find(
+                      k => globalPiece[k] === captured
+                  ),
                   position: captured.current_position,
               }
             : null,
@@ -140,13 +231,13 @@ function simulateMove(piece, targetSquare) {
 }
 
 function undoSimulatedMove(prev) {
-    if (!prev) return;
+    if (!prev || !prev.pieceName) return;
     const piece = globalPiece[prev.pieceName];
-    piece.current_position = prev.oldPosition;
+    if (piece) piece.current_position = prev.oldPosition;
 
     if (prev.capturedPiece) {
-        globalPiece[prev.capturedPiece.name].current_position =
-            prev.capturedPiece.position;
+        const cap = globalPiece[prev.capturedPiece.pieceKey];
+        if (cap) cap.current_position = prev.capturedPiece.position;
     }
 }
 
@@ -156,6 +247,12 @@ export function isCheckmate(currentTurn) {
 
     for (const piece of pieces) {
         const possibleMoves = getValidMoves(piece, currentTurn);
+
+        if (!Array.isArray(possibleMoves)) {
+            console.warn("Некорректный формат ходов:", piece, possibleMoves);
+            continue;
+        }
+
         for (const move of possibleMoves) {
             const prev = simulateMove(piece, move);
             const stillInCheck = isInCheck(currentTurn);
@@ -188,14 +285,12 @@ function showCheckIfKing(piece, pieceId, keySquareMapper) {
         attackSquares = giveKingCaptureIds(pieceId, enemyColor);
     }
 
-    console.log("Функция атаки вернула:", attackSquares);
-
     const kingId = Object.keys(keySquareMapper).find(id => {
         const el = keySquareMapper[id];
         return (
             el.piece &&
             el.piece.piece_name ===
-                `${color === "white" ? "black" : "white"}-king`
+                `${color === "white" ? "black" : "white"}_king`
         );
     });
 
@@ -204,11 +299,12 @@ function showCheckIfKing(piece, pieceId, keySquareMapper) {
         highlightKingSquare(kingId);
     }
 }
+
 function highlightKingSquare(id) {
     const el = document.getElementById(id);
     if (el) {
-        el.classList.add("check-highlight");
-        setTimeout(() => el.classList.remove("check-highlight"), 2000);
+        el.classList.add("checkHighlight");
+        setTimeout(() => el.classList.remove("checkHighlight"), 2000);
     }
 }
 
@@ -217,7 +313,6 @@ function showCheckAlert() {
     alert.innerText = "Шах!";
     alert.className = "check-alert";
 
-    // Пример стилей
     Object.assign(alert.style, {
         position: "absolute",
         top: "10px",
@@ -233,8 +328,7 @@ function showCheckAlert() {
     });
 
     document.body.appendChild(alert);
-
-    setTimeout(() => alert.remove(), 2000); // исчезает через 2 секунды
+    setTimeout(() => alert.remove(), 2000);
 }
 
 function showCheckmateAlert(winnerColor) {
@@ -259,7 +353,6 @@ function showCheckmateAlert(winnerColor) {
     });
 
     document.body.appendChild(alert);
-
     setTimeout(() => alert.remove(), 5000);
 }
 
@@ -281,7 +374,16 @@ export function checkGameEnd(currentTurn) {
             showCheckAlert();
             whoInCheck = currentTurn;
         }
+
         if (isCheckmate(currentTurn)) {
+            if (isCheckmate(currentTurn)) {
+                console.warn("Шах и мат!");
+                console.warn(
+                    "Текущее состояние:",
+                    JSON.stringify(globalPiece, null, 2)
+                );
+            }
+
             const winnerColor = currentTurn === "white" ? "black" : "white";
             showCheckmateAlert(winnerColor);
             disableAllInteraction();
@@ -300,4 +402,6 @@ export {
     showCheckIfKing,
     showCheckmateAlert,
     disableAllInteraction,
+    getValidMoves,
+    simulateMove,
 };

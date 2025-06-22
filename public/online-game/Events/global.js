@@ -22,8 +22,11 @@ import {
     giveKingHighlightIds,
     getAttackedSquares,
 } from "../Helper/commonHelper.js";
+import { enPassantTarget, updateEnPassantTarget } from "../Helper/enPassant.js";
 // import logMoves from "../Helper/logging.js";
 import pawnPromotion from "../Helper/modalCreator.js";
+import { getValidMoves } from "../Helper/checkmateHelper.js";
+import { simulateMove } from "../Helper/checkmateHelper.js";
 
 let hightlight_state = false;
 let inTurn = "white";
@@ -31,6 +34,29 @@ let whoInCheck = null;
 
 function changeTurn() {
     inTurn = inTurn === "white" ? "black" : "white";
+}
+
+function highlightEnPassantTargets(current_pos, color) {
+    const dir = color === "white" ? 1 : -1;
+    const row = color === "white" ? "5" : "4";
+    const enPassantRow = row;
+    if (current_pos[1] !== enPassantRow) return;
+
+    const left = String.fromCharCode(current_pos[0].charCodeAt(0) - 1);
+    const right = String.fromCharCode(current_pos[0].charCodeAt(0) + 1);
+
+    [left, right].forEach(file => {
+        const target = `${file}${+current_pos[1] + dir}`;
+        const adjacentPawn = keySquareMapper[`${file}${current_pos[1]}`]?.piece;
+        if (
+            enPassantTarget === target &&
+            adjacentPawn?.piece_name ===
+                (color === "white" ? "black_pawn" : "white_pawn")
+        ) {
+            keySquareMapper[target].highlight = true;
+            keySquareMapper[target].enPassant = true;
+        }
+    });
 }
 
 function captureInTurn(square) {
@@ -79,22 +105,25 @@ function callbackPawnPromotion(piece, id) {
     currentElement.innerHTML = "";
     currentElement.append(image);
 }
-function moveElement(piece, id, internalMove = false) {
+export function moveElement(piece, id, internalMove = false) {
     if (!internalMove) {
         if (!piece || !keySquareMapper[id]) return;
 
         const targetSquare = keySquareMapper[id];
+
+        // Нельзя съесть короля
+        if (targetSquare?.piece?.piece_name.includes("king")) return;
+
         const movingColor = piece.piece_name.startsWith("white")
             ? "white"
             : "black";
-
         const targetColor = targetSquare?.piece?.piece_name?.startsWith("white")
             ? "white"
             : "black";
 
         if (targetSquare?.piece && movingColor === targetColor) return;
 
-        // Создаём клон состояния с сохранением color
+        // Клонируем состояние
         const clonedState = globalState.map(row =>
             row.map(cell => ({
                 id: cell.id,
@@ -102,25 +131,19 @@ function moveElement(piece, id, internalMove = false) {
                 color: cell.color,
             }))
         );
-        console.log(
-            "Атакуемые клетки",
-            movingColor,
-            getAttackedSquares(movingColor, clonedState)
-        );
 
         const from = clonedState
             .flat()
             .find(el => el.id === piece.current_position);
         const to = clonedState.flat().find(el => el.id === id);
 
-        to.piece = from.piece;
+        to.piece = { ...from.piece };
         from.piece = null;
 
-        // Проверка, попадёт ли король под шах
+        // Проверка на шах
         const kingSquare = clonedState
             .flat()
             .find(sq => sq.piece?.piece_name === `${movingColor}_king`);
-
         if (kingSquare) {
             const attacked = getAttackedSquares(
                 movingColor === "white" ? "black" : "white",
@@ -133,10 +156,28 @@ function moveElement(piece, id, internalMove = false) {
         }
     }
 
+    const oldPosition = piece.current_position;
     const shouldPromote = checkForPawnPromotion(piece, id);
     const targetPiece = keySquareMapper[id]?.piece;
 
-    // Запрет на поедание короля
+    // Взятие на проходе
+    if (piece.type === "pawn" && !targetPiece && enPassantTarget === id) {
+        const direction = piece.piece_name.includes("white") ? -1 : 1;
+        const capturedRow = parseInt(id[1]) + direction;
+        const capturedId = `${id[0]}${capturedRow}`;
+        const capturedSquare = globalState
+            .flat()
+            .find(sq => sq.id === capturedId);
+
+        if (capturedSquare?.piece?.piece_name.includes("pawn")) {
+            delete capturedSquare.piece;
+
+            const capturedDOM = document.getElementById(capturedId);
+            if (capturedDOM) capturedDOM.innerHTML = "";
+        }
+    }
+
+    // Повторная проверка — нельзя съесть короля
     if (targetPiece?.piece_name.includes("king")) return;
 
     // Рокировка
@@ -156,18 +197,23 @@ function moveElement(piece, id, internalMove = false) {
 
     // Обновление глобального состояния
     globalState.flat().forEach(el => {
-        if (el.id === piece.current_position) delete el.piece;
+        if (el.id === oldPosition) delete el.piece;
         if (el.id === id) el.piece = piece;
     });
 
-    const prevSquare = document.getElementById(piece.current_position);
+    // Работа с DOM
+    const prevSquare = document.getElementById(oldPosition);
     const targetSquare = document.getElementById(id);
 
     if (prevSquare && targetSquare) {
         prevSquare.classList.remove("hightlightYellow");
+
         const pieceImage = prevSquare.querySelector("img");
+        const targetImage = targetSquare.querySelector("img");
+
         if (pieceImage) {
-            targetSquare.innerHTML = "";
+            prevSquare.removeChild(pieceImage);
+            if (targetImage) targetSquare.removeChild(targetImage);
             targetSquare.appendChild(pieceImage);
         }
     }
@@ -181,6 +227,9 @@ function moveElement(piece, id, internalMove = false) {
     }
 
     if (!internalMove) {
+        // Установка цели для взятия на проходе
+        updateEnPassantTarget(oldPosition, id, piece);
+
         changeTurn();
         const nextPlayerColor = inTurn;
 
@@ -198,56 +247,43 @@ function moveElement(piece, id, internalMove = false) {
         .flat()
         .find(sq => sq.piece?.piece_name === `${enemyColor}_king`);
 
-    if (enemyKingSquare) {
-        const attackedNow = getAttackedSquares(
-            inTurn === "white" ? "black" : "white",
-            globalState
-        );
-        if (attackedNow.includes(enemyKingSquare.id)) {
-            console.log("Шах!");
-            document
-                .getElementById(enemyKingSquare.id)
-                ?.classList.add("highlightRed");
-        }
-    }
+    globalStateRender();
 }
 
-function filterLegalMoves(piece, moveList, globalState, getAttackedSquares) {
+function filterLegalMoves(piece, moveList) {
     const color = piece.piece_name.includes("white") ? "white" : "black";
-    const opponent = color === "white" ? "black" : "white";
-
-    const fromId = piece.current_position;
-
     const legal = [];
 
     for (const targetId of moveList) {
-        // глубокая копия состояния доски
         const clone = JSON.parse(JSON.stringify(globalState));
-        // найти в clone объекты клеток from и to
         const flat = clone.flat();
-        const fromClone = flat.find(sq => sq.id === fromId);
+        const fromClone = flat.find(sq => sq.id === piece.current_position);
         const toClone = flat.find(sq => sq.id === targetId);
 
-        if (!fromClone) continue;
-        // симуляция хода: переместить ссылку на piece
-        // Примечание: в clone мы храним только данные о piece в globalState.
+        // Сохраняем вражескую фигуру (если есть) для восстановления
+        const capturedPiece = toClone.piece;
+
         toClone.piece = fromClone.piece;
         fromClone.piece = null;
+        toClone.piece.current_position = targetId;
 
-        // найти в clone позицию короля этого цвета
         const kingSq = flat.find(
             sq => sq.piece?.piece_name === `${color}_king`
         );
-        if (!kingSq) {
-            // без короля – некорректно, но пропускаем
-            continue;
-        }
-        // получить атакованные клетки противника на clone
-        const attacked = getAttackedSquares(opponent, clone);
-        // если после хода король не под атакой, ход легален
+
+        if (!kingSq) continue;
+
+        const attacked = getAttackedSquares(
+            color === "white" ? "black" : "white",
+            clone
+        );
+
         if (!attacked.includes(kingSq.id)) {
             legal.push(targetId);
         }
+
+        // Восстанавливаем состояние
+        toClone.piece = capturedPiece;
     }
     return legal;
 }
@@ -305,6 +341,7 @@ function handleWhitePieceClick(square, getRawMovesCallback) {
     });
 
     globalStateRender();
+    console.log("Legal moves для", piece.piece_name, ":", legalMoves);
 }
 
 function handleBlackPieceClick(square, getRawMovesCallback) {
@@ -414,8 +451,8 @@ function trimLineOnFirstPiece(arr, currentColor) {
         if (!square.piece) {
             result.push(id);
         } else {
-            if (square.piece.color === currentColor) break; // своя — стоп
-            result.push(id); // враг — можно съесть
+            const pieceColor = square.piece?.color;
+            if (pieceColor !== currentColor) result.push(id);
             break;
         }
     }
@@ -460,91 +497,68 @@ function whitePawnClick(square) {
     }
 
     if (square.captureHighlight) {
-        // пешка хавает других
         moveElement(selfHighlightState, square.id);
         clearPreviousSelfHighlight(selfHighlightState);
         clearHighlightLocal();
         return;
     }
 
-    //очистить всю доску от подсветок
     clearPreviousSelfHighlight(selfHighlightState);
     clearHighlightLocal();
 
-    //подсветка фигуры при клике
     selfHighlight(piece);
     hightlight_state = true;
     selfHighlightState = piece;
-
-    //фигура для динамического движения
     moveState = piece;
 
     const current_pos = piece.current_position;
-    const flatArray = globalState.flat();
 
-    //иницилизация позиции для передвижения
+    let forwardMoves = [];
     if (current_pos[1] === "2") {
-        //начальная позиция
-        let hightlightSquareIds = [
-            `${current_pos[0]}${Number(current_pos[1]) + 1}`,
-            `${current_pos[0]}${Number(current_pos[1]) + 2}`,
-        ];
-
-        hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
-
-        hightlightSquareIds.forEach(hightlight => {
-            const element = keySquareMapper[hightlight];
-            element.highlight = true;
-        });
-
-        const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
-            Number(current_pos[1]) + 1
-        }`;
-        const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
-            Number(current_pos[1]) + 1
-        }`;
-
-        let captureIds = [col1, col2];
-        captureIds.forEach(id => {
-            checkPieceOfOpponentOnElement(id, "white");
-        });
-
-        //с той же позиции
-        hightlightSquareIds.forEach(hightlight => {
-            const element = keySquareMapper[hightlight];
-            element.highlight = true;
-        });
-
-        globalStateRender();
+        forwardMoves.push(`${current_pos[0]}3`, `${current_pos[0]}4`);
     } else {
-        const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
-            Number(current_pos[1]) + 1
-        }`;
-        const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
-            Number(current_pos[1]) + 1
-        }`;
-
-        let captureIds = [col1, col2];
-        captureIds.forEach(id => {
-            checkPieceOfOpponentOnElement(id, "white");
-        });
-
-        //с той же позиции
-        const hightlightSquareIds = [
-            `${current_pos[0]}${Number(current_pos[1]) + 1}`,
-        ];
-
-        captureIds.forEach(element => {
-            checkPieceOfOpponentOnElement(element, "white");
-        });
-
-        hightlightSquareIds.forEach(hightlight => {
-            const element = keySquareMapper[hightlight];
-            element.highlight = true;
-        });
-
-        globalStateRender();
+        forwardMoves.push(`${current_pos[0]}${+current_pos[1] + 1}`);
     }
+
+    forwardMoves = checkSquareCaptureId(forwardMoves);
+    forwardMoves.forEach(id => (keySquareMapper[id].highlight = true));
+
+    // Обычные атаки
+    const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
+        +current_pos[1] + 1
+    }`;
+    const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
+        +current_pos[1] + 1
+    }`;
+    [col1, col2].forEach(id => checkPieceOfOpponentOnElement(id, "white"));
+
+    // Взятие на проходе
+    const left = String.fromCharCode(current_pos[0].charCodeAt(0) - 1);
+    const right = String.fromCharCode(current_pos[0].charCodeAt(0) + 1);
+    const enPassantRow = "5";
+
+    if (current_pos[1] === enPassantRow) {
+        const leftTarget = `${left}6`;
+        const rightTarget = `${right}6`;
+
+        if (
+            enPassantTarget === leftTarget &&
+            keySquareMapper[`${left}5`]?.piece?.piece_name === "black_pawn"
+        ) {
+            keySquareMapper[leftTarget].highlight = true;
+            keySquareMapper[leftTarget].enPassant = true;
+        }
+
+        if (
+            enPassantTarget === rightTarget &&
+            keySquareMapper[`${right}5`]?.piece?.piece_name === "black_pawn"
+        ) {
+            keySquareMapper[rightTarget].highlight = true;
+            keySquareMapper[rightTarget].enPassant = true;
+        }
+    }
+
+    globalStateRender();
 }
 
 //логика белого слона
@@ -577,28 +591,21 @@ function whiteKingClick(square) {
     }
 
     if (square.captureHighlight) {
-        // король хавает других
         moveElement(selfHighlightState, piece.current_position);
         clearPreviousSelfHighlight(selfHighlightState);
         clearHighlightLocal();
         return;
     }
 
-    //очистить всю доску от подсветок
     clearPreviousSelfHighlight(selfHighlightState);
     clearHighlightLocal();
 
-    //подсветка фигуры при клике
     selfHighlight(piece);
     hightlight_state = true;
     selfHighlightState = piece;
-
-    //фигура для динамического движения
     moveState = piece;
 
     const current_pos = piece.current_position;
-    const flatArray = globalState.flat();
-
     let hightlightSquareIds = giveKingHighlightIds(current_pos);
     let temp = [];
 
@@ -615,6 +622,7 @@ function whiteKingClick(square) {
 
     let result = [];
 
+    // Рокировка
     if (!piece.move) {
         const rook1 = globalPiece.white_rook_1;
         const rook2 = globalPiece.white_rook_2;
@@ -635,6 +643,7 @@ function whiteKingClick(square) {
         }
     }
 
+    // Добавляем потенциальные ходы
     result.push(checkSquareCaptureId(bottomLeft));
     result.push(checkSquareCaptureId(topLeft));
     result.push(checkSquareCaptureId(bottomRight));
@@ -644,51 +653,42 @@ function whiteKingClick(square) {
     result.push(checkSquareCaptureId(left));
     result.push(checkSquareCaptureId(bottom));
 
-    //для темп
-    temp.push(bottomLeft);
-    temp.push(topLeft);
-    temp.push(bottomRight);
-    temp.push(topRight);
-    temp.push(top);
-    temp.push(right);
-    temp.push(left);
-    temp.push(bottom);
+    temp.push(
+        bottomLeft,
+        topLeft,
+        bottomRight,
+        topRight,
+        top,
+        right,
+        left,
+        bottom
+    );
 
-    // hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
     hightlightSquareIds = result.flat();
 
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
+    // фильтруем только безопасные клетки (не под шахом после хода)
+    hightlightSquareIds = hightlightSquareIds.filter(toId => {
+        return simulateMove(piece, toId, globalState, newState => {
+            const kingSquare = newState
+                .flat()
+                .find(sq => sq.piece?.piece_name === "white_king");
+            const enemyAttacks = getAttackedSquares("black", newState);
+            return !enemyAttacks.includes(kingSquare.id);
+        });
     });
 
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
+    hightlightSquareIds.forEach(id => {
+        const square = keySquareMapper[id];
+        square.highlight = true;
     });
 
-    let captureIds = [];
-
-    for (let index = 0; index < temp.length; index++) {
-        const arr = temp[index];
-
-        for (let j = 0; j < arr.length; j++) {
-            const element = arr[j];
-
-            let checkPieceResult = checkWeatherPieceExistsOrNot(element);
-            if (
-                checkPieceResult &&
-                checkPieceResult.piece &&
-                checkPieceResult.piece.piece_name
-                    .toLowerCase()
-                    .includes("white")
-            ) {
+    // ненужный код (можно удалить)
+    for (let arr of temp) {
+        for (let el of arr) {
+            const target = checkWeatherPieceExistsOrNot(el);
+            if (target?.piece?.piece_name?.toLowerCase().includes("white"))
                 break;
-            }
-
-            if (checkPieceOfOpponentOnElement(element, "white")) {
-                break;
-            }
+            if (checkPieceOfOpponentOnElement(el, "white")) break;
         }
     }
 
@@ -707,7 +707,7 @@ function blackKingClick(square) {
 
     if (square.captureHighlight) {
         // король хавает других
-        moveElement(selfHighlightState, piece.current_position);
+        moveElement(selfHighlightState, square.id);
         clearPreviousSelfHighlight(selfHighlightState);
         clearHighlightLocal();
         return;
@@ -721,6 +721,14 @@ function blackKingClick(square) {
     selfHighlight(piece);
     hightlight_state = true;
     selfHighlightState = piece;
+
+    if (isInCheck("black")) {
+        hightlightSquareIds = hightlightSquareIds.filter(toId => {
+            return simulateMove(piece, toId, globalState, newState => {
+                return !getAttackedSquares("black", newState).includes(toId);
+            });
+        });
+    }
 
     //фигура для динамического движения
     moveState = piece;
@@ -786,9 +794,14 @@ function blackKingClick(square) {
     // hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
     hightlightSquareIds = result.flat();
 
-    hightlightSquareIds.forEach(hightlight => {
-        const element = keySquareMapper[hightlight];
-        element.highlight = true;
+    hightlightSquareIds = hightlightSquareIds.filter(toId => {
+        return simulateMove(piece, toId, globalState, newState => {
+            const kingSquare = newState
+                .flat()
+                .find(sq => sq.piece?.piece_name === "black_king");
+            const enemyAttacks = getAttackedSquares("black", newState);
+            return !enemyAttacks.includes(kingSquare.id);
+        });
     });
 
     hightlightSquareIds.forEach(hightlight => {
@@ -855,7 +868,6 @@ function blackPawnClick(square) {
     }
 
     if (square.captureHighlight) {
-        // пешка хавает других
         moveElement(selfHighlightState, square.id);
         clearPreviousSelfHighlight(selfHighlightState);
         clearHighlightLocal();
@@ -865,74 +877,62 @@ function blackPawnClick(square) {
     clearPreviousSelfHighlight(selfHighlightState);
     clearHighlightLocal();
 
-    //подсветка фигуры при клике
     selfHighlight(piece);
     hightlight_state = true;
     selfHighlightState = piece;
-
-    //фигура для динамического движения
     moveState = piece;
 
     const current_pos = piece.current_position;
-    const flatArray = globalState.flat();
+    const hightlightSquareIds = [];
+    const captureIds = [];
 
-    //иницилизация позиции для передвижения
+    // Ходы вперед
     if (current_pos[1] === "7") {
-        //начальная позиция
-        let hightlightSquareIds = [
-            `${current_pos[0]}${Number(current_pos[1]) - 1}`,
-            `${current_pos[0]}${Number(current_pos[1]) - 2}`,
-        ];
-
-        hightlightSquareIds = checkSquareCaptureId(hightlightSquareIds);
-
-        hightlightSquareIds.forEach(hightlight => {
-            const element = keySquareMapper[hightlight];
-            element.highlight = true;
-        });
-
-        const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
-            Number(current_pos[1]) - 1
-        }`;
-        const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
-            Number(current_pos[1]) - 1
-        }`;
-
-        let captureIds = [col1, col2];
-        // captureIds = checkSquareCaptureId(captureIds);
-
-        captureIds.forEach(element => {
-            checkPieceOfOpponentOnElement(element, "black");
-        });
-
-        globalStateRender();
+        hightlightSquareIds.push(`${current_pos[0]}6`, `${current_pos[0]}5`);
     } else {
-        const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
-            Number(current_pos[1]) - 1
-        }`;
-        const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
-            Number(current_pos[1]) - 1
-        }`;
-
-        let captureIds = [col1, col2];
-        // captureIds = checkSquareCaptureId(captureIds);
-
-        //с той же позиции
-        const hightlightSquareIds = [
-            `${current_pos[0]}${Number(current_pos[1]) - 1}`,
-        ];
-
-        captureIds.forEach(element => {
-            checkPieceOfOpponentOnElement(element, "black");
-        });
-
-        hightlightSquareIds.forEach(hightlight => {
-            const element = keySquareMapper[hightlight];
-            element.highlight = true;
-        });
-
-        globalStateRender();
+        hightlightSquareIds.push(`${current_pos[0]}${+current_pos[1] - 1}`);
     }
+
+    const legalMoves = checkSquareCaptureId(hightlightSquareIds);
+    legalMoves.forEach(id => (keySquareMapper[id].highlight = true));
+
+    // Возможные атаки
+    const col1 = `${String.fromCharCode(current_pos[0].charCodeAt(0) - 1)}${
+        +current_pos[1] - 1
+    }`;
+    const col2 = `${String.fromCharCode(current_pos[0].charCodeAt(0) + 1)}${
+        +current_pos[1] - 1
+    }`;
+
+    [col1, col2].forEach(id => checkPieceOfOpponentOnElement(id, "black"));
+
+    // === ВЗЯТИЕ НА ПРОХОДЕ ===
+    const left = String.fromCharCode(current_pos[0].charCodeAt(0) - 1);
+    const right = String.fromCharCode(current_pos[0].charCodeAt(0) + 1);
+    const enPassantRow = "4";
+
+    if (current_pos[1] === enPassantRow) {
+        const leftTarget = `${left}3`;
+        const rightTarget = `${right}3`;
+
+        if (
+            enPassantTarget === leftTarget &&
+            keySquareMapper[`${left}4`]?.piece?.piece_name === "white_pawn"
+        ) {
+            keySquareMapper[leftTarget].highlight = true;
+            keySquareMapper[leftTarget].enPassant = true;
+        }
+
+        if (
+            enPassantTarget === rightTarget &&
+            keySquareMapper[`${right}4`]?.piece?.piece_name === "white_pawn"
+        ) {
+            keySquareMapper[rightTarget].highlight = true;
+            keySquareMapper[rightTarget].enPassant = true;
+        }
+    }
+
+    globalStateRender();
 }
 
 function clearPreviousSelfHighlight(piece) {
@@ -953,23 +953,19 @@ function GlobalEvent() {
 
             const myTurn = inTurn; // чей сейчас ход
             if (isInCheck(myTurn)) {
-                const moveList = getRawMoves(clickedPiece); // получить обычные ходы (до фильтрации)
-                const legalMoves = filterLegalMoves(
-                    clickedPiece,
-                    moveList,
-                    globalState,
-                    getAttackedSquares
-                );
+                if (!square.piece) return;
 
-                if (legalMoves.length === 0) {
-                    console.log(
-                        "Фигура не может спасти от шаха. Ход запрещён."
-                    );
+                const validMoves = getValidMoves(square.piece, inTurn);
+                if (validMoves.length === 0) {
+                    console.log("Нет доступных ходов для снятия шаха");
                     return;
                 }
 
-                // Подсветить только legalMoves
-                highlightMoves(legalMoves);
+                // Подсветка только легальных ходов
+                highlightSquares(validMoves);
+                selfHighlight(square.piece);
+                moveState = square.piece;
+                return;
             }
 
             if (square && square.piece && square.piece.piece_name) {

@@ -1,9 +1,29 @@
 import * as piece from "../Data/pieces.js";
 import { ROOT_DIV } from "../Helper/constants.js";
 import { globalState } from "../index.js";
-import { isInCheck, isCheckmate } from "../Helper/checkmateHelper.js";
+import {
+    isInCheck,
+    isCheckmate,
+    filterLegalMoves,
+} from "../Helper/checkmateHelper.js";
+import { getValidMoves } from "../Helper/checkmateHelper.js";
+import { getAttackedSquares } from "../Helper/commonHelper.js";
+import { moveElement } from "../Events/global.js";
 
 const globalPiece = new Object();
+
+function givePawnCaptureIds(pos, color) {
+    const file = pos[0];
+    const rank = parseInt(pos[1]);
+
+    const direction = color === "white" ? 1 : -1;
+    const left =
+        String.fromCharCode(file.charCodeAt(0) - 1) + (rank + direction);
+    const right =
+        String.fromCharCode(file.charCodeAt(0) + 1) + (rank + direction);
+
+    return [left, right];
+}
 
 function checkCheckmateStatus(currentTurn) {
     const opponentTurn = currentTurn === "white" ? "black" : "white";
@@ -17,10 +37,6 @@ function checkCheckmateStatus(currentTurn) {
     }
 
     if (isInCheck(opponentTurn)) {
-        document
-            .getElementById(attackedKing.current_position)
-            .classList.add("checkHighlight");
-
         console.log(`Шах ${opponentTurn}!`);
 
         if (isCheckmate(opponentTurn)) {
@@ -34,18 +50,29 @@ function checkCheckmateStatus(currentTurn) {
 function globalStateRender() {
     globalState.forEach(row => {
         row.forEach(element => {
+            const el = document.getElementById(element.id);
+
+            // Очистка обычной подсветки
+            const existingHighlights = el.querySelectorAll(".hightlight");
+            existingHighlights.forEach(h => h.remove());
+
+            // Очистка шах-подсветки
+            el.classList.remove("dangerHighlight");
+
+            // Подсветка возможных ходов
             if (element.highlight) {
                 const hightlightSpan = document.createElement("span");
                 hightlightSpan.classList.add("hightlight");
-                document.getElementById(element.id).appendChild(hightlightSpan);
-            } else if (element.highlight === null) {
-                const el = document.getElementById(element.id);
-                const highlights = Array.from(
-                    el.getElementsByClassName("hightlight")
-                );
-                highlights.forEach(element => {
-                    el.removeChild(element);
-                });
+                el.appendChild(hightlightSpan);
+            }
+
+            // Подсветка шаха
+            if (
+                element.piece &&
+                element.piece.piece_name.includes("king") &&
+                isInCheck(element.piece.color)
+            ) {
+                el.classList.add("dangerHighlight");
             }
         });
     });
@@ -60,17 +87,13 @@ function selfHighlight(piece) {
 function pieceRender(data) {
     data.forEach(row => {
         row.forEach(square => {
-            // в квадрате может быть фигура
             if (square.piece) {
                 const squareEl = document.getElementById(square.id);
+                const pieceImg = document.createElement("img");
+                pieceImg.src = square.piece.img;
+                pieceImg.classList.add("piece");
 
-                // создание фигуры
-                const piece = document.createElement("img");
-                piece.src = square.piece.img;
-                piece.classList.add("piece");
-
-                // переместить фигуру в доску шахмат
-                squareEl.appendChild(piece);
+                squareEl.appendChild(pieceImg);
             }
         });
     });
@@ -82,14 +105,30 @@ function initGameRender(data) {
         const rowEl = document.createElement("div");
         element.forEach(square => {
             const squareDiv = document.createElement("div");
+
             squareDiv.id = square.id;
             squareDiv.classList.add(square.color, "square");
 
-            //подпись клеток
-            // const labelId = document.createElement("span");
-            // labelId.textContent = square.id;
-            // labelId.classList.add("labelId", `${square.color}-label-id`);
-            // squareDiv.append(labelId);
+            squareDiv.style.position = "relative"; // ВАЖНО для координат
+
+            const file = square.id[0]; // буква (a-h)
+            const rank = square.id[1]; // цифра (1-8)
+
+            // Координаты — слева
+            if (file === "a") {
+                const rankLeft = document.createElement("div");
+                rankLeft.classList.add("coord", "rank", "left");
+                rankLeft.textContent = rank;
+                squareDiv.appendChild(rankLeft);
+            }
+
+            // Координаты — снизу
+            if (rank === "1") {
+                const fileBottom = document.createElement("div");
+                fileBottom.classList.add("coord", "file", "bottom");
+                fileBottom.textContent = file;
+                squareDiv.appendChild(fileBottom);
+            }
 
             // рендер белых
             if (square.id[1] == 2) {
@@ -99,6 +138,7 @@ function initGameRender(data) {
 
             if (square.id == "a1" || square.id == "h1") {
                 square.piece = piece.whiteRook(square.id);
+                
                 if (globalPiece.white_rook_1) {
                     globalPiece.white_rook_2 = square.piece;
                 } else {

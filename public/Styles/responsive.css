@@ -1,3 +1,23 @@
+@media (max-width: 480px) {
+    body {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 320px) {
+    body {
+        font-size: 12px;
+    }
+
+    .hero .button {
+        font-size: 12px;
+    }
+
+    #root {
+        margin-top: 20%;
+    }
+}
+
 @media (max-width: 575px) {
     * {
         box-sizing: border-box;
@@ -73,7 +93,7 @@
     }
 
     #root {
-        margin-top: 20px;
+        margin-top: 40%;
         max-width: 90vw;
         margin-left: 20px;
 
@@ -135,6 +155,10 @@
         flex: 0 0 45%;
         margin: 10px 0;
     }
+
+    #root {
+        margin-top: 20%;
+    }
 }
 
 @media (min-width: 992px) and (max-width: 1199px) {
@@ -153,11 +177,19 @@
     .section-card {
         flex: 0 0 30%;
     }
+
+    #root {
+        margin-top: 20%;
+    }
 }
 
 @media (min-width: 1200px) {
 
     .hero h1 {
         font-size: 3rem;
+    }
+
+    #root {
+        margin-top: 20%;
     }
 }

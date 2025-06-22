@@ -145,6 +145,8 @@ function giveBishopCaptureIds(id, color, state = globalState) {
     ];
     const result = [];
 
+    const flatState = Object.values(state).flat();
+
     for (const [df, dr] of directions) {
         let file = id[0];
         let rank = parseInt(id[1]);
@@ -156,14 +158,13 @@ function giveBishopCaptureIds(id, color, state = globalState) {
             if (file < "a" || file > "h" || rank < 1 || rank > 8) break;
 
             const squareId = `${file}${rank}`;
-            const square = state.flat().find(s => s.id === squareId);
+            const square = flatState.find(s => s.id === squareId);
             if (!square) break;
 
             if (square.piece) {
-                if (square.piece.color !== color) {
-                    result.push(squareId); // можно съесть
-                }
-                break; // путь заблокирован
+                //  Добавляем любую первую фигуру (даже короля)
+                result.push(squareId);
+                break;
             }
         }
     }
@@ -171,15 +172,17 @@ function giveBishopCaptureIds(id, color, state = globalState) {
     return result;
 }
 
-//функция для подсветки шахов слона
+//функция для подсветки шахов
 function giveRookCaptureIds(id, color, state = globalState) {
     const directions = [
         [1, 0],
         [-1, 0],
         [0, 1],
-        [0, -1], // вниз, вверх, вправо, влево
+        [0, -1],
     ];
+
     const result = [];
+    const flatState = Object.values(state).flat();
 
     for (const [df, dr] of directions) {
         let file = id[0];
@@ -192,14 +195,13 @@ function giveRookCaptureIds(id, color, state = globalState) {
             if (file < "a" || file > "h" || rank < 1 || rank > 8) break;
 
             const squareId = `${file}${rank}`;
-            const square = state.flat().find(s => s.id === squareId);
+            const square = flatState.find(s => s.id === squareId);
+
             if (!square) break;
 
             if (square.piece) {
-                if (square.piece.color !== color) {
-                    result.push(squareId); // можно съесть
-                }
-                break; // дальше путь заблокирован
+                result.push(squareId); // добавляем всегда
+                break;
             }
         }
     }
@@ -207,7 +209,7 @@ function giveRookCaptureIds(id, color, state = globalState) {
     return result;
 }
 
-//функция для подсветки шахов слона
+//функция для подсветки шахов ферзч
 function giveQueenCaptureIds(id, color, state = globalState) {
     const bishop = giveBishopCaptureIds(id, color, state);
     const rook = giveRookCaptureIds(id, color, state);
@@ -215,7 +217,10 @@ function giveQueenCaptureIds(id, color, state = globalState) {
 }
 
 //функция для подсветки ходов ладьи
-function giveRookHighlightIds(id, state = globalState) {
+function giveRookHighlightIds(id) {
+    let file = id[0];
+    let rank = Number(id[1]);
+
     const directions = {
         top: [],
         bottom: [],
@@ -223,55 +228,24 @@ function giveRookHighlightIds(id, state = globalState) {
         left: [],
     };
 
-    const file = id[0];
-    const rank = parseInt(id[1]);
-
     // Вверх
     for (let r = rank + 1; r <= 8; r++) {
-        const squareId = `${file}${r}`;
-        const square = state.flat().find(s => s.id === squareId);
-        if (!square) break;
-        if (square.piece) {
-            directions.top.push(squareId);
-            break;
-        }
-        directions.top.push(squareId);
+        directions.top.push(`${file}${r}`);
     }
 
     // Вниз
     for (let r = rank - 1; r >= 1; r--) {
-        const squareId = `${file}${r}`;
-        const square = state.flat().find(s => s.id === squareId);
-        if (!square) break;
-        if (square.piece) {
-            directions.bottom.push(squareId);
-            break;
-        }
-        directions.bottom.push(squareId);
+        directions.bottom.push(`${file}${r}`);
     }
 
     // Вправо
     for (let f = file.charCodeAt(0) + 1; f <= "h".charCodeAt(0); f++) {
-        const squareId = `${String.fromCharCode(f)}${rank}`;
-        const square = state.flat().find(s => s.id === squareId);
-        if (!square) break;
-        if (square.piece) {
-            directions.right.push(squareId);
-            break;
-        }
-        directions.right.push(squareId);
+        directions.right.push(`${String.fromCharCode(f)}${rank}`);
     }
 
     // Влево
     for (let f = file.charCodeAt(0) - 1; f >= "a".charCodeAt(0); f--) {
-        const squareId = `${String.fromCharCode(f)}${rank}`;
-        const square = state.flat().find(s => s.id === squareId);
-        if (!square) break;
-        if (square.piece) {
-            directions.left.push(squareId);
-            break;
-        }
-        directions.left.push(squareId);
+        directions.left.push(`${String.fromCharCode(f)}${rank}`);
     }
 
     return directions;
@@ -328,33 +302,39 @@ function giveQueenHighlightIds(id) {
 }
 
 //функция для подсветки ходов короля
-function giveKingHighlightIds(id) {
-    const rookMoves = giveRookHighlightIds(id);
-    const bishopMoves = giveBishopHighlightIds(id);
+function giveKingHighlightIds(id, color) {
+    const file = id[0];
+    const rank = parseInt(id[1]);
 
-    const returnResult = {
-        left: rookMoves.left,
-        right: rookMoves.right,
-        top: rookMoves.top,
-        bottom: rookMoves.bottom,
-
-        topLeft: bishopMoves.topLeft,
-        bottomLeft: bishopMoves.bottomLeft,
-        topRight: bishopMoves.topRight,
-        bottomRight: bishopMoves.bottomRight,
+    const directions = {
+        topLeft: [-1, 1],
+        top: [0, 1],
+        topRight: [1, 1],
+        left: [-1, 0],
+        right: [1, 0],
+        bottomLeft: [-1, -1],
+        bottom: [0, -1],
+        bottomRight: [1, -1],
     };
 
-    for (const key in returnResult) {
-        if (Object.hasOwnProperty.call(returnResult, key)) {
-            const element = returnResult[key];
+    const result = {};
 
-            if (element.length != 0) {
-                returnResult[key] = new Array(element[0]);
-            }
+    for (const dir in directions) {
+        const [df, dr] = directions[dir];
+        const f = String.fromCharCode(file.charCodeAt(0) + df);
+        const r = rank + dr;
+        const squareId = f + r;
+
+        const square = keySquareMapper[squareId];
+        if (square && (!square.piece || square.piece.color !== color)) {
+            result[dir] = [squareId]; // массив из 1 клетки
+        } else {
+            result[dir] = []; // пустой массив, если нельзя туда пойти
         }
     }
 
-    return returnResult;
+    result.all = Object.values(result).flat();
+    return result;
 }
 
 function generateLineMoves(startId, df, dr) {
@@ -381,7 +361,7 @@ function giveKingCaptureIds(id, color, state = globalState) {
     let result = Object.values(squares).flat();
 
     return result.filter(squareId => {
-        const square = state.flat().find(s => s.id === squareId);
+        const square = Object.values(state).find(s => s.id === squareId);
         return square?.piece && square.piece.color !== color;
     });
 }
@@ -393,7 +373,7 @@ function giveKnightCaptureIds(id, color, state = globalState) {
     const highlightIds = giveKnightHighlightIds(id);
 
     return highlightIds.filter(squareId => {
-        const square = state.flat().find(s => s.id === squareId);
+        const square = Object.values(state).find(s => s.id === squareId);
         return square?.piece && square.piece.color !== color;
     });
 }
@@ -420,7 +400,7 @@ function givePawnCaptureIds(id, color, state = globalState) {
     if (rightFile <= "h") possibleCaptures.push(`${rightFile}${nextRank}`);
 
     for (const squareId of possibleCaptures) {
-        const square = state.flat().find(s => s.id === squareId);
+        const square = Object.values(state).find(s => s.id === squareId);
         if (square?.piece && square.piece.color !== color) {
             captures.push(squareId);
         }
