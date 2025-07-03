@@ -15,7 +15,7 @@
     <div class="container">
         <header>
             <div class="header-container">
-                <button id="themeToggle" class="button">Сменить
+                <button id="themeToggle" data-i18n="nav.btn" class="button">Сменить
                     тему</button>
                 <a href="/"><img src="/logo.png" alt="логотип" class="logo"></a>
                 <div class="burger" id="burger">☰</div>
@@ -77,6 +77,24 @@
             </div>
         </footer>
     </div>
+
+    <script>
+        fetch("/api/content/schedule")
+            .then(res => res.json())
+            .then(data => {
+                document.querySelector('[data-i18n="schedule.title"]').textContent = data.hero.title;
+                document.querySelector('[data-i18n="schedule.subtitle"]').textContent = data.hero.subtitle;
+                document.querySelector('[data-i18n="schedule.signup"]').textContent = data.hero.buttonText;
+
+                const list = document.querySelector(".schedule ul");
+                list.innerHTML = "";
+                data.list.forEach(item => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `<strong>${item.day}:</strong> ${item.time} — ${item.label}`;
+                    list.appendChild(li);
+                });
+            });
+    </script>
 
     <script>
         const themeToggleBtn = document.getElementById('themeToggle');

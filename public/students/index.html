@@ -15,7 +15,7 @@
     <div class="container">
         <header>
             <div class="header-container">
-                <button id="themeToggle" class="button">Сменить
+                <button id="themeToggle" data-i18n="nav.btn" class="button">Сменить
                     тему</button>
                 <a href="/">
                     <img src="/logo.png" alt="логотип" class="logo">
@@ -87,6 +87,31 @@
             </div>
         </footer>
     </div>
+    <script>
+        fetch("/api/content/students")
+            .then(res => res.json())
+            .then(data => {
+                // Заголовки
+                document.querySelector('[data-i18n="students.heading"]').textContent = data.hero.title;
+                document.querySelector('[data-i18n="students.subheading"]').textContent = data.hero.subtitle;
+
+                // Список учеников
+                const container = document.querySelector(".students-list");
+                container.innerHTML = ""; // очищаем
+
+                data.students.forEach(student => {
+                    const card = document.createElement("div");
+                    card.classList.add("student-card");
+                    card.innerHTML = `
+                        <img src="${student.img}" alt="${student.name}">
+                        <h3>${student.name}</h3>
+                        <p>${student.desc}</p>
+                    `;
+                    container.appendChild(card);
+                });
+            });
+    </script>
+
     <script>
         const themeToggleBtn = document.getElementById('themeToggle');
 

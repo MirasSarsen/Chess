@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Редактор Главной</title>
+    <link rel="stylesheet" href="/admin/styles.css" />
+    <style>
+        /* Внутренние стили для визуального редактора */
+
+        .admin-nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .admin-link {
+            background: #0077cc;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .admin-link:hover {
+            background: #005fa3;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f1f1f1;
+            color: #333;
+            padding: 40px;
+            margin: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #222;
+        }
+
+        form {
+            background: #fff;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            margin-top: 30px;
+            color: #2c3e50;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0 20px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #00cc44;
+            color: white;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #009933;
+        }
+
+        .section-group {
+            margin-bottom: 40px;
+        }
+
+        .feature-block {
+            border: 1px dashed #ccc;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .feature-block input {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+
+<body>
+    <div class="admin-nav">
+        <a href="/admin/index.html" class="admin-link">Редактор Главной</a>
+        <a href="/admin/schedule.html" class="admin-link">Редактор Расписания</a>
+        <a href="/admin/students.html" class="admin-link">Редактор Учеников</a>
+        <a href="/admin/tournaments.html" class="admin-link">Редактор Турниров</a>
+        <!-- сюда можно добавить другие редакторы -->
+    </div>
+    <h1>Редактор Главной страницы</h1>
+    <form id="homeForm">
+        <h2>Hero</h2>
+        <input name="hero.title" placeholder="Заголовок" /><br />
+        <input name="hero.subtitle" placeholder="Подзаголовок" /><br />
+
+        <h2>Features</h2>
+        <div id="features">
+            <!-- заполним через JS -->
+        </div>
+
+        <h2>Футер</h2>
+        <input name="footer.aboutDesc" placeholder="О нас" /><br />
+        <input name="footer.phone" placeholder="Телефон" /><br />
+
+        <button type="submit">💾 Сохранить</button>
+    </form>
+
+    <script>
+        const form = document.getElementById("homeForm");
+        const featuresDiv = document.getElementById("features");
+
+        function setValue(path, value) {
+            const input = form.querySelector(`[name="${path}"]`);
+            if (input) input.value = value;
+        }
+
+        function getNestedValue(obj, path) {
+            return path.split(".").reduce((o, key) => o?.[key], obj);
+        }
+
+        async function loadContent() {
+            const res = await fetch("/api/content/home");
+            const data = await res.json();
+
+            setValue("hero.title", data.hero.title);
+            setValue("hero.subtitle", data.hero.subtitle);
+            setValue("footer.aboutDesc", data.footer.aboutDesc);
+            setValue("footer.phone", data.footer.phone);
+
+            // Генерация feature-блоков
+            featuresDiv.innerHTML = "";
+            data.features.forEach((feature, i) => {
+                const titleName = `features.${i}.title`;
+                const descName = `features.${i}.desc`;
+                featuresDiv.innerHTML += `
+                <div class="feature-block">
+                    <input name="${titleName}" placeholder="Фича ${i + 1} — Заголовок" value="${feature.title}" />
+                    <input name="${descName}" placeholder="Фича ${i + 1} — Описание" value="${feature.desc}" />
+                </div>
+                `;
+            });
+        }
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const data = {
+                hero: {
+                    title: formData.get("hero.title"),
+                    subtitle: formData.get("hero.subtitle")
+                },
+                features: [0, 1, 2].map(i => ({
+                    title: formData.get(`features.${i}.title`),
+                    desc: formData.get(`features.${i}.desc`)
+                })),
+                footer: {
+                    aboutDesc: formData.get("footer.aboutDesc"),
+                    phone: formData.get("footer.phone")
+                }
+            };
+
+            await fetch("/api/content/home", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            alert("Сохранено!");
+        });
+
+        loadContent();
+    </script>
+</body>
+
+</html>

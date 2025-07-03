@@ -2,6 +2,7 @@ function initI18n() {
     const translations = {
         ru: {
             nav: {
+                btn: "Сменить тему",
                 students: "Ученики",
                 trainers: "Тренеры",
                 schedule: "Расписание",
@@ -91,6 +92,7 @@ function initI18n() {
         },
         kz: {
             nav: {
+                btn: "Тақырыпты өзгерту",
                 students: "Оқушылар",
                 trainers: "Жаттықтырушылар",
                 schedule: "Кесте",

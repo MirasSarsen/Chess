@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Редактор Расписания</title>
+    <link rel="stylesheet" href="/admin/styles.css" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f1f1f1;
+            color: #333;
+            padding: 40px;
+            margin: 0;
+        }
+
+        .admin-nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .admin-link {
+            background: #0077cc;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .admin-link:hover {
+            background: #005fa3;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #222;
+        }
+
+        form {
+            background: #fff;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            margin-top: 30px;
+            color: #2c3e50;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0 20px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #00cc44;
+            color: white;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #009933;
+        }
+
+        .session-block {
+            border: 1px dashed #ccc;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .session-block input {
+            margin-bottom: 10px;
+        }
+
+        .remove-btn {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            float: right;
+        }
+
+        .remove-btn:hover {
+            background: #cc0000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-nav">
+        <a href="/admin/index.html" class="admin-link">Редактор Главной</a>
+        <a href="/admin/schedule.html" class="admin-link">Редактор Расписания</a>
+        <a href="/admin/students.html" class="admin-link">Редактор Учеников</a>
+        <a href="/admin/tournaments.html" class="admin-link">Редактор Турниров</a>
+    </div>
+
+    <h1>Редактор страницы «Расписание»</h1>
+    <form id="scheduleForm">
+        <h2>Hero</h2>
+        <input name="hero.title" placeholder="Заголовок" />
+        <input name="hero.subtitle" placeholder="Подзаголовок" />
+        <input name="hero.buttonText" placeholder="Текст кнопки" />
+
+        <h2>Занятия</h2>
+        <div id="sessionList"></div>
+        <button type="button" onclick="addSession()">➕ Добавить занятие</button>
+
+        <br><br>
+        <button type="submit">💾 Сохранить</button>
+    </form>
+
+    <script>
+        const form = document.getElementById("scheduleForm");
+        const sessionList = document.getElementById("sessionList");
+
+        function createSessionBlock(day = "", time = "", label = "") {
+            const index = sessionList.children.length;
+            const div = document.createElement("div");
+            div.className = "session-block";
+            div.innerHTML = `
+        <button type="button" class="remove-btn" onclick="this.parentElement.remove()">✖</button>
+        <input name="day${index}" placeholder="День недели" value="${day}" />
+        <input name="time${index}" placeholder="Время (например 16:00)" value="${time}" />
+        <input name="label${index}" placeholder="Описание группы" value="${label}" />
+      `;
+            sessionList.appendChild(div);
+        }
+
+        function addSession() {
+            createSessionBlock();
+        }
+
+        async function loadContent() {
+            const res = await fetch("/api/content/schedule");
+            const data = await res.json();
+
+            form.querySelector('[name="hero.title"]').value = data.hero.title;
+            form.querySelector('[name="hero.subtitle"]').value = data.hero.subtitle;
+            form.querySelector('[name="hero.buttonText"]').value = data.hero.buttonText;
+
+            sessionList.innerHTML = "";
+            data.list.forEach(item => {
+                createSessionBlock(item.day, item.time, item.label);
+            });
+        }
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+
+            const list = [];
+            const blocks = sessionList.querySelectorAll(".session-block");
+            blocks.forEach((block, i) => {
+                const day = block.querySelector(`[name="day${i}"]`)?.value || "";
+                const time = block.querySelector(`[name="time${i}"]`)?.value || "";
+                const label = block.querySelector(`[name="label${i}"]`)?.value || "";
+                if (day && time && label) {
+                    list.push({ day, time, label });
+                }
+            });
+
+            const data = {
+                hero: {
+                    title: formData.get("hero.title"),
+                    subtitle: formData.get("hero.subtitle"),
+                    buttonText: formData.get("hero.buttonText")
+                },
+                list
+            };
+
+            await fetch("/api/content/schedule", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+
+            alert("Сохранено!");
+        });
+
+        loadContent();
+    </script>
+</body>
+
+</html>

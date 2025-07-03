@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Редактор Учеников</title>
+    <link rel="stylesheet" href="/admin/styles.css" />
+    <style>
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #222;
+        }
+
+        form {
+            background: #fff;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            margin-top: 30px;
+            color: #2c3e50;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0 20px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #00cc44;
+            color: white;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #009933;
+        }
+
+        .student-block {
+            border: 1px dashed #ccc;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .student-block input {
+            margin-bottom: 10px;
+        }
+
+        .remove-btn {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            float: right;
+        }
+
+        .remove-btn:hover {
+            background: #cc0000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-nav">
+        <a href="/admin/index.html" class="admin-link">Редактор Главной</a>
+        <a href="/admin/schedule.html" class="admin-link">Редактор Расписания</a>
+        <a href="/admin/students.html" class="admin-link">Редактор Учеников</a>
+        <a href="/admin/tournaments.html" class="admin-link">Редактор Турниров</a>
+    </div>
+
+    <h1>Редактор страницы «Ученики»</h1>
+    <form id="studentForm">
+        <h2>Hero</h2>
+        <input name="hero.title" placeholder="Заголовок" />
+        <input name="hero.subtitle" placeholder="Подзаголовок" />
+
+        <h2>Ученики</h2>
+        <div id="studentList"></div>
+        <button type="button" onclick="addStudent()">➕ Добавить ученика</button>
+
+        <br><br>
+        <button type="submit">💾 Сохранить</button>
+    </form>
+
+    <script>
+        const form = document.getElementById("studentForm");
+        const studentList = document.getElementById("studentList");
+
+        function createStudentBlock(name = "", desc = "", img = "") {
+            const index = studentList.children.length;
+            const div = document.createElement("div");
+            div.className = "student-block";
+            div.innerHTML = `
+                <button type="button" class="remove-btn" onclick="this.parentElement.remove()">✖</button>
+                <input name="name${index}" placeholder="Имя ученика" value="${name}" />
+                <input name="desc${index}" placeholder="Описание ученика" value="${desc}" />
+                <input name="img${index}" placeholder="Ссылка на изображение" value="${img}" />
+            `;
+            studentList.appendChild(div);
+        }
+
+        function addStudent() {
+            createStudentBlock();
+        }
+
+        async function loadContent() {
+            const res = await fetch("/api/content/students");
+            const data = await res.json();
+
+            form.querySelector('[name="hero.title"]').value = data.hero.title;
+            form.querySelector('[name="hero.subtitle"]').value = data.hero.subtitle;
+
+            studentList.innerHTML = "";
+            data.students.forEach(s => {
+                createStudentBlock(s.name, s.desc, s.img);
+            });
+        }
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+
+            const blocks = studentList.querySelectorAll(".student-block");
+            const students = [];
+
+            blocks.forEach((block, i) => {
+                const name = block.querySelector(`[name="name${i}"]`)?.value || "";
+                const desc = block.querySelector(`[name="desc${i}"]`)?.value || "";
+                const img = block.querySelector(`[name="img${i}"]`)?.value || "";
+                if (name && desc && img) {
+                    students.push({ name, desc, img });
+                }
+            });
+
+            const data = {
+                hero: {
+                    title: formData.get("hero.title"),
+                    subtitle: formData.get("hero.subtitle")
+                },
+                students
+            };
+
+            await fetch("/api/content/students", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+
+            alert("Сохранено!");
+        });
+
+        loadContent();
+    </script>
+</body>
+
+</html>

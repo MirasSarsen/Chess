@@ -519,7 +519,6 @@ function whitePawnClick(square) {
     } else {
         forwardMoves.push(`${current_pos[0]}${+current_pos[1] + 1}`);
     }
-
     forwardMoves = checkSquareCaptureId(forwardMoves);
     forwardMoves.forEach(id => (keySquareMapper[id].highlight = true));
 

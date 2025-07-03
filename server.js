@@ -2,6 +2,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const path = require("path");
+const fs = require("fs");
 
 const app = express();
 const server = http.createServer(app);
@@ -11,11 +12,30 @@ const PORT = process.env.PORT || 3000;
 const rooms = {};
 
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/admin", express.static(path.join(__dirname, "admin")));
+app.use(express.json()); // для POST-запросов с JSON
 
+// ===== Chess Lobby =====
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "lobby.html"));
 });
 
+// ===== API для редактирования JSON =====
+app.get("/api/content/:page", (req, res) => {
+    const filePath = path.join(__dirname, "content", `${req.params.page}.json`);
+    if (!fs.existsSync(filePath)) return res.status(404).send("Not found");
+
+    const data = fs.readFileSync(filePath, "utf8") || "{}";
+    res.json(JSON.parse(data));
+});
+
+app.post("/api/content/:page", (req, res) => {
+    const filePath = path.join(__dirname, "content", `${req.params.page}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(req.body, null, 2));
+    res.json({ success: true });
+});
+
+// ===== Socket.IO (шахматы) =====
 io.on("connection", socket => {
     console.log("Player connected:", socket.id);
 
@@ -56,6 +76,7 @@ io.on("connection", socket => {
     });
 });
 
+// ===== Запуск =====
 server.listen(PORT, () => {
     console.log(`Server listening on http://localhost:${PORT}`);
 });
